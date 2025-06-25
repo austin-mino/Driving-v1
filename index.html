@@ -58,10 +58,10 @@
     const maxSpeed = 200;
 
     let steerAngle = 0;            // 현재 핸들 각도
-    const maxSteer = 0.5;          // 핸들 최대 회전 각도 (rad)
+    const maxSteer = 0.7;          // 핸들 최대 회전 각도 (rad), 0.7로 증가
     const steerStep = 0.02;        // 누를 때 증가량
     const steerRestore = 0.01;     // 손 뗐을 때 복원 속도
-    const steerEffect = 0.0025;    // 차량이 핸들에 따라 회전하는 정도 (핸들 각도 * 속도 * 이 값)
+    const steerEffect = 0.0025;    // 차량이 핸들에 따라 회전하는 정도
 
     const speedDisplay = document.getElementById("speedometer");
 
