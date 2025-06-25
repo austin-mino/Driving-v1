@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D Car Driving Game</title>
-
-  <link rel="manifest" href="manifest.json" />
-
   <style>
     body {
       margin: 0;
@@ -55,8 +52,8 @@
       gap: 15px;
     }
     button {
-      width: 70px;
-      height: 50px;
+      width: 60px;
+      height: 45px;
       font-size: 18px;
       border-radius: 12px;
       border: none;
@@ -83,7 +80,7 @@
       border-radius: 12px;
       user-select: none;
       z-index: 10;
-      width: 120px;
+      width: 130px;
       text-align: center;
     }
     canvas {
@@ -109,7 +106,6 @@
   <div id="speedometer">속도: 0 km/h</div>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
 
   <script>
     // 가로모드 체크 및 안내
@@ -132,7 +128,7 @@
     window.addEventListener('orientationchange', checkOrientation);
     checkOrientation();
 
-    // 게임 입력 비활성화 함수
+    // 게임 입력 비활성화 플래그
     let inputsDisabled = false;
     function disableGameInputs(disabled) {
       inputsDisabled = disabled;
@@ -141,14 +137,12 @@
     // Three.js 기본 설정
     let scene, camera, renderer;
     let car;
-    let carSpeed = 0;
-    let maxSpeed = 200;
-    let acceleration = 1.2;
-    let deceleration = 1.8;
-    let turnSpeed = 0.04;
     let velocity = 0;
+    const maxSpeed = 200;
+    const acceleration = 0.3;
+    const deceleration = 0.2;
+    const turnSpeed = 0.04;
     let direction = 0; // 좌우 회전량
-    let clock = new THREE.Clock();
 
     init();
     animate();
@@ -159,7 +153,6 @@
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
       camera.position.set(0, 5, -10);
-      camera.lookAt(0, 0, 0);
 
       renderer = new THREE.WebGLRenderer({antialias: true});
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -170,25 +163,25 @@
       const floorMaterial = new THREE.MeshStandardMaterial({color: 0x222222});
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -0.1;
+      floor.position.y = 0;
       scene.add(floor);
 
       // 조명
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
-      directionalLight.position.set(5, 10, 7);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(10, 20, 10);
       scene.add(directionalLight);
 
-      // 자동차 모델 (단순 박스)
+      // 자동차 (파란 박스)
       const carGeometry = new THREE.BoxGeometry(2, 1, 4);
       const carMaterial = new THREE.MeshStandardMaterial({color: 0x0077ff});
       car = new THREE.Mesh(carGeometry, carMaterial);
       car.position.y = 0.5;
       scene.add(car);
 
-      // 뒤 카메라(자동차 뒤쪽)
+      // 카메라 초기 위치 조정
       updateCamera();
 
       // 윈도우 리사이즈 처리
@@ -198,7 +191,6 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      // 버튼 이벤트
       setupControls();
     }
 
@@ -211,6 +203,7 @@
       camera.lookAt(car.position);
     }
 
+    // 컨트롤 세팅
     function setupControls() {
       const leftBtn = document.getElementById('leftBtn');
       const rightBtn = document.getElementById('rightBtn');
@@ -222,100 +215,32 @@
       let accelPressed = false;
       let brakePressed = false;
 
-      leftBtn.addEventListener('touchstart', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        leftPressed = true;
-      });
-      leftBtn.addEventListener('touchend', e => {
-        e.preventDefault();
-        leftPressed = false;
-      });
+      function preventDefault(e) { e.preventDefault(); }
 
-      rightBtn.addEventListener('touchstart', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        rightPressed = true;
-      });
-      rightBtn.addEventListener('touchend', e => {
-        e.preventDefault();
-        rightPressed = false;
-      });
+      leftBtn.addEventListener('touchstart', e => { preventDefault(e); if(inputsDisabled) return; leftPressed = true; });
+      leftBtn.addEventListener('touchend', e => { preventDefault(e); leftPressed = false; });
+      rightBtn.addEventListener('touchstart', e => { preventDefault(e); if(inputsDisabled) return; rightPressed = true; });
+      rightBtn.addEventListener('touchend', e => { preventDefault(e); rightPressed = false; });
+      accelBtn.addEventListener('touchstart', e => { preventDefault(e); if(inputsDisabled) return; accelPressed = true; });
+      accelBtn.addEventListener('touchend', e => { preventDefault(e); accelPressed = false; });
+      brakeBtn.addEventListener('touchstart', e => { preventDefault(e); if(inputsDisabled) return; brakePressed = true; });
+      brakeBtn.addEventListener('touchend', e => { preventDefault(e); brakePressed = false; });
 
-      accelBtn.addEventListener('touchstart', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        accelPressed = true;
-      });
-      accelBtn.addEventListener('touchend', e => {
-        e.preventDefault();
-        accelPressed = false;
-      });
+      // PC 마우스 이벤트
+      leftBtn.addEventListener('mousedown', e => { preventDefault(e); if(inputsDisabled) return; leftPressed = true; });
+      leftBtn.addEventListener('mouseup', e => { preventDefault(e); leftPressed = false; });
+      leftBtn.addEventListener('mouseleave', e => { leftPressed = false; });
+      rightBtn.addEventListener('mousedown', e => { preventDefault(e); if(inputsDisabled) return; rightPressed = true; });
+      rightBtn.addEventListener('mouseup', e => { preventDefault(e); rightPressed = false; });
+      rightBtn.addEventListener('mouseleave', e => { rightPressed = false; });
+      accelBtn.addEventListener('mousedown', e => { preventDefault(e); if(inputsDisabled) return; accelPressed = true; });
+      accelBtn.addEventListener('mouseup', e => { preventDefault(e); accelPressed = false; });
+      accelBtn.addEventListener('mouseleave', e => { accelPressed = false; });
+      brakeBtn.addEventListener('mousedown', e => { preventDefault(e); if(inputsDisabled) return; brakePressed = true; });
+      brakeBtn.addEventListener('mouseup', e => { preventDefault(e); brakePressed = false; });
+      brakeBtn.addEventListener('mouseleave', e => { brakePressed = false; });
 
-      brakeBtn.addEventListener('touchstart', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        brakePressed = true;
-      });
-      brakeBtn.addEventListener('touchend', e => {
-        e.preventDefault();
-        brakePressed = false;
-      });
-
-      // PC용 마우스 이벤트도 추가 (클릭 유지)
-      leftBtn.addEventListener('mousedown', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        leftPressed = true;
-      });
-      leftBtn.addEventListener('mouseup', e => {
-        e.preventDefault();
-        leftPressed = false;
-      });
-      leftBtn.addEventListener('mouseleave', e => {
-        leftPressed = false;
-      });
-
-      rightBtn.addEventListener('mousedown', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        rightPressed = true;
-      });
-      rightBtn.addEventListener('mouseup', e => {
-        e.preventDefault();
-        rightPressed = false;
-      });
-      rightBtn.addEventListener('mouseleave', e => {
-        rightPressed = false;
-      });
-
-      accelBtn.addEventListener('mousedown', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        accelPressed = true;
-      });
-      accelBtn.addEventListener('mouseup', e => {
-        e.preventDefault();
-        accelPressed = false;
-      });
-      accelBtn.addEventListener('mouseleave', e => {
-        accelPressed = false;
-      });
-
-      brakeBtn.addEventListener('mousedown', e => {
-        e.preventDefault();
-        if(inputsDisabled) return;
-        brakePressed = true;
-      });
-      brakeBtn.addEventListener('mouseup', e => {
-        e.preventDefault();
-        brakePressed = false;
-      });
-      brakeBtn.addEventListener('mouseleave', e => {
-        brakePressed = false;
-      });
-
-      // 키보드 제어 (선택 사항)
+      // 키보드 컨트롤 (선택사항)
       window.addEventListener('keydown', e => {
         if(inputsDisabled) return;
         if(e.code === 'ArrowLeft') leftPressed = true;
@@ -330,14 +255,13 @@
         if(e.code === 'ArrowDown') brakePressed = false;
       });
 
-      // 게임 상태 업데이트
       function updateControls() {
-        if(leftPressed) direction += 0.03;
-        else if(rightPressed) direction -= 0.03;
+        if(leftPressed) direction += turnSpeed;
+        else if(rightPressed) direction -= turnSpeed;
         else direction *= 0.7;
 
-        if(accelPressed) velocity += acceleration * 0.1;
-        else velocity -= deceleration * 0.1;
+        if(accelPressed) velocity += acceleration;
+        else velocity -= deceleration;
 
         // 속도 제한 및 감속 처리
         velocity = Math.min(Math.max(velocity, 0), maxSpeed);
@@ -354,9 +278,9 @@
       car.rotation.y += direction;
 
       // 자동차 이동 (앞으로 z축)
-      const moveZ = velocity * 0.02; // 속도 조정용 상수
-      car.position.x += Math.sin(car.rotation.y) * moveZ;
-      car.position.z += Math.cos(car.rotation.y) * moveZ;
+      const moveDistance = velocity * 0.02;
+      car.position.x += Math.sin(car.rotation.y) * moveDistance;
+      car.position.z += Math.cos(car.rotation.y) * moveDistance;
 
       // 카메라 업데이트
       updateCamera();
