@@ -7,28 +7,16 @@
 
   <style>
     *{box-sizing:border-box}
-    body{
-      margin:0;overflow:hidden;
-      background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif
-    }
-    #rotateWarning{
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:rgba(0,0,0,.8);padding:20px;border-radius:10px;display:none;z-index:99
-    }
-    #buttons{
-      position:fixed;bottom:20px;width:100%;display:flex;justify-content:space-between;
-      padding:0 20px;z-index:10;pointer-events:none
-    }
+    body{margin:0;overflow:hidden;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    #rotateWarning{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:rgba(0,0,0,.8);padding:20px;border-radius:10px;display:none;z-index:99}
+    #buttons{position:fixed;bottom:20px;width:100%;display:flex;justify-content:space-between;
+      padding:0 20px;z-index:10;pointer-events:none}
     #leftButtons,#rightButtons{display:flex;gap:10px}
-    button{
-      padding:14px 20px;font-size:16px;border:none;border-radius:12px;
-      background:#4f9eff;color:#fff;font-weight:bold;pointer-events:auto
-    }
-    #speedometer{
-      position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-      background:rgba(0,0,0,.6);padding:8px 20px;border-radius:10px;
-      font-size:18px;font-weight:bold
-    }
+    button{padding:14px 20px;font-size:16px;border:none;border-radius:12px;
+      background:#4f9eff;color:#fff;font-weight:bold;pointer-events:auto}
+    #speedometer{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+      background:rgba(0,0,0,.6);padding:8px 20px;border-radius:10px;font-size:18px;font-weight:bold}
   </style>
 </head>
 <body>
@@ -49,31 +37,29 @@
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script>
-    /* ───────── 기기 방향 경고 ───────── */
+    /* ───── 기기 방향 경고 ───── */
     const rotateWarning = document.getElementById("rotateWarning");
-    function checkOrientation(){
-      rotateWarning.style.display = (window.innerHeight>window.innerWidth)?"block":"none";
-    }
+    function checkOrientation(){rotateWarning.style.display=(window.innerHeight>window.innerWidth)?"block":"none";}
     window.addEventListener("resize",checkOrientation);
     window.addEventListener("orientationchange",checkOrientation);
     checkOrientation();
 
-    /* ───────── 전역 변수 ───────── */
+    /* ───── 전역 변수 ───── */
     let scene,camera,renderer,car;
     let velocity = 0, maxSpeed = 200;
 
-    /* 회전 관련: 속도를 줄인 값들 */
-    let steerVelocity = 0;          // 프레임당 회전값
-    const steerSpeed   = 0.018;     // 1회 누적량(기존 0.03 → 0.018)
-    const steerDecay   = 0.006;     // 복원 속도 유지
-    const steerLimit   = 0.25;      // 최대 회전 속도 제한(라디안)
+    /* 회전 관련: 훨씬 느리고, 각도도 작음 */
+    let steerVelocity = 0;             // 프레임당 회전값
+    const steerSpeed = 0.008;          // 누를 때 증가량 (더 느림)
+    const steerDecay = 0.003;          // 복귀 속도도 살짝 줄임
+    const steerLimit = 0.12;           // 최대 회전 속도 제한 (약 ±7°)
 
     const speedDisplay = document.getElementById("speedometer");
 
     init();
     animate();
 
-    /* ───────── 초기화 ───────── */
+    /* ───── 초기화 ───── */
     function init(){
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x000000);
@@ -86,9 +72,10 @@
       document.body.appendChild(renderer.domElement);
 
       // 바닥
-      const floorGeo = new THREE.PlaneGeometry(1000,1000);
-      const floorMat = new THREE.MeshStandardMaterial({color:0x222222});
-      const floor = new THREE.Mesh(floorGeo,floorMat);
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(1000,1000),
+        new THREE.MeshStandardMaterial({color:0x222222})
+      );
       floor.rotation.x = -Math.PI/2;
       scene.add(floor);
 
@@ -97,10 +84,11 @@
       scene.add(new THREE.AmbientLight(0xffffff,0.5));
 
       // 자동차
-      const carGeo = new THREE.BoxGeometry(2,1,4);
-      const carMat = new THREE.MeshStandardMaterial({color:0xff3333});
-      car = new THREE.Mesh(carGeo,carMat);
-      car.position.y = 0.5;
+      car = new THREE.Mesh(
+        new THREE.BoxGeometry(2,1,4),
+        new THREE.MeshStandardMaterial({color:0xff3333})
+      );
+      car.position.y = .5;
       scene.add(car);
 
       window.addEventListener("resize",()=>{
@@ -112,10 +100,9 @@
       setupControls();
     }
 
-    /* ───────── 버튼 입력 처리 ───────── */
+    /* ───── 버튼 입력 처리 ───── */
     function setupControls(){
       let left=false,right=false,accel=false,brake=false;
-
       function bind(id,setter){
         const btn=document.getElementById(id);
         btn.addEventListener("mousedown",()=>setter(true));
@@ -130,40 +117,35 @@
       bind("brakeBtn",v=>brake=v);
 
       setInterval(()=>{
-        /* 조향 속도 변경 */
-        if(left)  steerVelocity = Math.min(steerVelocity + steerSpeed,  steerLimit);
-        else if(right) steerVelocity = Math.max(steerVelocity - steerSpeed, -steerLimit);
-        else{
-          // 자연 복귀
+        /* 조향 */
+        if(left)        steerVelocity = Math.min(steerVelocity + steerSpeed,  steerLimit);
+        else if(right)  steerVelocity = Math.max(steerVelocity - steerSpeed, -steerLimit);
+        else{ // 자연 복귀
           if(steerVelocity>0) steerVelocity = Math.max(steerVelocity - steerDecay, 0);
           else if(steerVelocity<0) steerVelocity = Math.min(steerVelocity + steerDecay, 0);
         }
 
-        /* 가속/감속 */
+        /* 속도 */
         if(accel) velocity = Math.min(velocity + 1.2, maxSpeed);
         else if(brake) velocity = Math.max(velocity - 4, 0);
         else velocity = Math.max(velocity - 0.6, 0);
       },30);
     }
 
-    /* ───────── 메인 루프 ───────── */
+    /* ───── 메인 루프 ───── */
     function animate(){
       requestAnimationFrame(animate);
 
-      /* 차체 회전 */
       car.rotation.y += steerVelocity;
 
-      /* 이동 */
       const moveZ = velocity * 0.02;
       car.position.x += Math.sin(car.rotation.y) * moveZ;
       car.position.z += Math.cos(car.rotation.y) * moveZ;
 
-      /* 카메라 추적 */
-      const cameraOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
-      camera.position.lerp(cameraOffset,0.08);
+      const camOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
+      camera.position.lerp(camOffset,0.08);
       camera.lookAt(car.position);
 
-      /* 속도 표시 */
       speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
 
       renderer.render(scene,camera);
