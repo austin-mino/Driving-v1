@@ -1,161 +1,175 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Car Driving Game</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: Arial, sans-serif; }
-    #rotateWarning {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
-      display: none; z-index: 99;
-    }
-    #buttons {
-      position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: space-between;
-      padding: 0 20px; z-index: 10; pointer-events: none;
-    }
-    #leftButtons, #rightButtons { display: flex; gap: 10px; }
-    button {
-      padding: 14px 20px; font-size: 16px; border: none; border-radius: 12px;
-      background: #4f9eff; color: white; font-weight: bold; pointer-events: auto;
-    }
-    #speedometer {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 10px;
-      font-size: 18px; font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>3D Car Driving Game with Steering Wheel</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: Arial, sans-serif; }
+  #rotateWarning {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
+    display: none; z-index: 99;
+  }
+  #buttons {
+    position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: space-between;
+    padding: 0 20px; z-index: 10; pointer-events: none;
+  }
+  #leftButtons, #rightButtons { display: flex; gap: 10px; }
+  button {
+    padding: 14px 20px; font-size: 16px; border: none; border-radius: 12px;
+    background: #4f9eff; color: white; font-weight: bold; pointer-events: auto;
+  }
+  #speedometer {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 10px;
+    font-size: 18px; font-weight: bold;
+  }
+</style>
 </head>
 <body>
-  <div id="rotateWarning">가로 모드로 전환해주세요</div>
-  <div id="speedometer">속도: 0 km/h</div>
-  <div id="buttons">
-    <div id="leftButtons">
-      <button id="leftBtn">◀ 좌</button>
-      <button id="rightBtn">우 ▶</button>
-    </div>
-    <div id="rightButtons">
-      <button id="accelBtn">엑셀</button>
-      <button id="brakeBtn">브레이크</button>
-    </div>
+<div id="rotateWarning">가로 모드로 전환해주세요</div>
+<div id="speedometer">속도: 0 km/h</div>
+<div id="buttons">
+  <div id="leftButtons">
+    <button id="leftBtn">◀ 좌</button>
+    <button id="rightBtn">우 ▶</button>
   </div>
+  <div id="rightButtons">
+    <button id="accelBtn">엑셀</button>
+    <button id="brakeBtn">브레이크</button>
+  </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script>
-    // 방향 경고
-    const rotateWarning = document.getElementById("rotateWarning");
-    function checkOrientation() {
-      rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
-    }
-    window.addEventListener("resize", checkOrientation);
-    window.addEventListener("orientationchange", checkOrientation);
-    checkOrientation();
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script>
+  const rotateWarning = document.getElementById("rotateWarning");
+  function checkOrientation() {
+    rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
+  }
+  window.addEventListener("resize", checkOrientation);
+  window.addEventListener("orientationchange", checkOrientation);
+  checkOrientation();
 
-    // 전역 변수
-    let scene, camera, renderer, car;
-    let velocity = 0;
-    const maxSpeed = 200;
+  let scene, camera, renderer, car, steeringWheel;
+  let velocity = 0;
+  const maxSpeed = 200;
 
-    let steerAngle = 0;            // 현재 핸들 각도
-    const maxSteer = 0.7;          // 핸들 최대 회전 각도 (rad), 0.7로 증가
-    const steerStep = 0.02;        // 누를 때 증가량
-    const steerRestore = 0.01;     // 손 뗐을 때 복원 속도
-    const steerEffect = 0.0025;    // 차량이 핸들에 따라 회전하는 정도
+  let steerAngle = 0;            // 핸들 현재 각도 (rad)
+  const maxSteer = 0.7;          // 핸들 최대 꺾임 각도 (rad)
+  const steerStep = 0.02;        // 버튼 누를 때 핸들 각도 변화량
+  const steerRestore = 0.015;    // 버튼 떼면 핸들 복원 속도
+  const steerEffect = 0.0025;    // 핸들 각도와 속도에 따른 차 회전 비율
 
-    const speedDisplay = document.getElementById("speedometer");
+  const speedDisplay = document.getElementById("speedometer");
 
-    init();
-    animate();
+  init();
+  animate();
 
-    function init() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000);
+  function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
 
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 5, -10);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, -10);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 바닥
+    const floorGeo = new THREE.PlaneGeometry(1000, 1000);
+    const floorMat = new THREE.MeshStandardMaterial({color: 0x333333});
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI/2;
+    scene.add(floor);
+
+    // 조명
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(10,20,10);
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+    // 자동차 (박스)
+    const carGeo = new THREE.BoxGeometry(2,1,4);
+    const carMat = new THREE.MeshStandardMaterial({color: 0xff3333});
+    car = new THREE.Mesh(carGeo, carMat);
+    car.position.y = 0.5;
+    scene.add(car);
+
+    // 핸들(원통형 링)
+    const wheelOuterRadius = 0.8;
+    const wheelTubeRadius = 0.1;
+    const steeringGeo = new THREE.TorusGeometry(wheelOuterRadius, wheelTubeRadius, 16, 100);
+    const steeringMat = new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.7, roughness: 0.3});
+    steeringWheel = new THREE.Mesh(steeringGeo, steeringMat);
+    steeringWheel.position.set(0, 1.2, 1.2);  // 차 앞쪽 위에 위치
+    car.add(steeringWheel);
+
+    // 카메라 리사이즈 대응
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+    });
 
-      // 바닥
-      const floorGeo = new THREE.PlaneGeometry(1000, 1000);
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      scene.add(floor);
+    setupControls();
+  }
 
-      // 조명
-      scene.add(new THREE.DirectionalLight(0xffffff, 1).position.set(10, 20, 10));
-      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  function setupControls() {
+    let left = false, right = false, accel = false, brake = false;
 
-      // 자동차
-      const carGeo = new THREE.BoxGeometry(2, 1, 4);
-      const carMat = new THREE.MeshStandardMaterial({ color: 0xff3333 });
-      car = new THREE.Mesh(carGeo, carMat);
-      car.position.y = 0.5;
-      scene.add(car);
-
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      setupControls();
+    function bind(id, fn) {
+      const btn = document.getElementById(id);
+      btn.addEventListener("mousedown", () => fn(true));
+      btn.addEventListener("mouseup", () => fn(false));
+      btn.addEventListener("mouseleave", () => fn(false));
+      btn.addEventListener("touchstart", e => { e.preventDefault(); fn(true); });
+      btn.addEventListener("touchend", () => fn(false));
     }
 
-    function setupControls() {
-      let left = false, right = false, accel = false, brake = false;
+    bind("leftBtn", v => left = v);
+    bind("rightBtn", v => right = v);
+    bind("accelBtn", v => accel = v);
+    bind("brakeBtn", v => brake = v);
 
-      function bind(id, fn) {
-        const btn = document.getElementById(id);
-        btn.addEventListener("mousedown", () => fn(true));
-        btn.addEventListener("mouseup", () => fn(false));
-        btn.addEventListener("mouseleave", () => fn(false));
-        btn.addEventListener("touchstart", e => { e.preventDefault(); fn(true); });
-        btn.addEventListener("touchend", () => fn(false));
+    setInterval(() => {
+      if(left) steerAngle = Math.min(steerAngle + steerStep, maxSteer);
+      else if(right) steerAngle = Math.max(steerAngle - steerStep, -maxSteer);
+      else {
+        if(steerAngle > 0) steerAngle = Math.max(steerAngle - steerRestore, 0);
+        else if(steerAngle < 0) steerAngle = Math.min(steerAngle + steerRestore, 0);
       }
 
-      bind("leftBtn", v => left = v);
-      bind("rightBtn", v => right = v);
-      bind("accelBtn", v => accel = v);
-      bind("brakeBtn", v => brake = v);
+      if(accel) velocity = Math.min(velocity + 1.2, maxSpeed);
+      else if(brake) velocity = Math.max(velocity - 4, 0);
+      else velocity = Math.max(velocity - 0.6, 0);
+    }, 30);
+  }
 
-      setInterval(() => {
-        if (left)  steerAngle = Math.min(steerAngle + steerStep,  maxSteer);
-        else if (right) steerAngle = Math.max(steerAngle - steerStep, -maxSteer);
-        else {
-          // 자연 복원
-          if (steerAngle > 0) steerAngle = Math.max(steerAngle - steerRestore, 0);
-          else if (steerAngle < 0) steerAngle = Math.min(steerAngle + steerRestore, 0);
-        }
+  function animate() {
+    requestAnimationFrame(animate);
 
-        if (accel) velocity = Math.min(velocity + 1.2, maxSpeed);
-        else if (brake) velocity = Math.max(velocity - 4, 0);
-        else velocity = Math.max(velocity - 0.6, 0);
-      }, 30);
-    }
+    // 핸들 회전 (차 기준으로 좌우로 돌기)
+    steeringWheel.rotation.z = -steerAngle * 2; // 핸들은 실제보다 좀 더 크게 돌아가도록 배율 조절
 
-    function animate() {
-      requestAnimationFrame(animate);
+    // 차체 회전 (핸들 각도 * 속도 * 계수)
+    car.rotation.y += steerAngle * velocity * steerEffect;
 
-      // 차를 핸들 각도에 따라 실제로 회전
-      car.rotation.y += steerAngle * velocity * steerEffect;
+    // 차 전진
+    const moveZ = velocity * 0.02;
+    car.position.x += Math.sin(car.rotation.y) * moveZ;
+    car.position.z += Math.cos(car.rotation.y) * moveZ;
 
-      const moveZ = velocity * 0.02;
-      car.position.x += Math.sin(car.rotation.y) * moveZ;
-      car.position.z += Math.cos(car.rotation.y) * moveZ;
+    // 카메라 뒤에서 따라오도록
+    const camOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
+    camera.position.lerp(camOffset, 0.08);
+    camera.lookAt(car.position);
 
-      const camOffset = new THREE.Vector3(0, 4, -10).applyMatrix4(car.matrixWorld);
-      camera.position.lerp(camOffset, 0.08);
-      camera.lookAt(car.position);
+    speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
 
-      speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
-
-      renderer.render(scene, camera);
-    }
-  </script>
+    renderer.render(scene, camera);
+  }
+</script>
 </body>
 </html>
