@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D Car Driving Game</title>
-
   <style>
     body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: Arial, sans-serif; }
     #rotateWarning {
@@ -44,7 +43,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script>
-    // ───── 방향 경고 ─────
+    // 방향 경고
     const rotateWarning = document.getElementById("rotateWarning");
     function checkOrientation() {
       rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
@@ -53,16 +52,16 @@
     window.addEventListener("orientationchange", checkOrientation);
     checkOrientation();
 
-    // ───── 전역 변수 ─────
+    // 전역 변수
     let scene, camera, renderer, car;
     let velocity = 0;
     const maxSpeed = 200;
 
-    let steerAngle = 0;            // 핸들 꺾인 각도
-    const maxSteer = 0.4;          // 핸들 최대 회전량 (rad)
-    const steerStep = 0.01;        // 누를 때 증가량
-    const steerRestore = 0.005;    // 손 뗐을 때 복원 속도
-    const steerEffect = 0.02;      // 차량 회전에 반영되는 비율
+    let steerAngle = 0;            // 현재 핸들 각도
+    const maxSteer = 0.5;          // 핸들 최대 회전 각도 (rad)
+    const steerStep = 0.02;        // 누를 때 증가량
+    const steerRestore = 0.01;     // 손 뗐을 때 복원 속도
+    const steerEffect = 0.0025;    // 차량이 핸들에 따라 회전하는 정도 (핸들 각도 * 속도 * 이 값)
 
     const speedDisplay = document.getElementById("speedometer");
 
@@ -125,7 +124,7 @@
       bind("brakeBtn", v => brake = v);
 
       setInterval(() => {
-        if (left)  steerAngle = Math.min(steerAngle + steerStep, maxSteer);
+        if (left)  steerAngle = Math.min(steerAngle + steerStep,  maxSteer);
         else if (right) steerAngle = Math.max(steerAngle - steerStep, -maxSteer);
         else {
           // 자연 복원
@@ -142,8 +141,8 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      // 조향에 따라 실제 회전
-      car.rotation.y += steerAngle * steerEffect;
+      // 차를 핸들 각도에 따라 실제로 회전
+      car.rotation.y += steerAngle * velocity * steerEffect;
 
       const moveZ = velocity * 0.02;
       car.position.x += Math.sin(car.rotation.y) * moveZ;
