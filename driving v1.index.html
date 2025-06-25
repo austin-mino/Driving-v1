@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>3D 자동차 게임</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      touch-action: none;
+    }
+    #rotateMessage {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      color: #fff;
+      font-size: 24px;
+      z-index: 9999;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+    .controls .side {
+      display: flex;
+      gap: 10px;
+      pointer-events: all;
+    }
+    button {
+      width: 70px;
+      height: 70px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    #speedometer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 20px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="rotateMessage" style="display:none;">가로 모드로 전환해주세요</div>
+  <div id="speedometer">속도: 0 km/h</div>
+  <div class="controls">
+    <div class="side" id="leftControls">
+      <button id="left">←</button>
+      <button id="right">→</button>
+    </div>
+    <div class="side" id="rightControls">
+      <button id="brake">브레이크</button>
+      <button id="accelerate">엑셀</button>
+    </div>
+  </div>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/controls/OrbitControls.js';
+    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+    let camera, scene, renderer, world;
+    let carBody, wheels = [];
+    let speed = 0, maxSpeed = 200, acceleration = 1;
+    const speedometer = document.getElementById('speedometer');
+
+    function init() {
+      // Scene setup
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, -10);
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Light
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(10, 10, 5);
+      scene.add(light);
+
+      // Physics
+      world = new CANNON.World();
+      world.gravity.set(0, -9.82, 0);
+
+      const groundMaterial = new CANNON.Material();
+      const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
+      groundBody.addShape(new CANNON.Plane());
+      groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+      world.addBody(groundBody);
+
+      const groundMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(200, 200),
+        new THREE.MeshStandardMaterial({ color: 0x555555 })
+      );
+      groundMesh.rotation.x = -Math.PI / 2;
+      scene.add(groundMesh);
+
+      // Car
+      const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.5, 2));
+      carBody = new CANNON.Body({ mass: 150 });
+      carBody.addShape(chassisShape);
+      carBody.position.set(0, 1, 0);
+      world.addBody(carBody);
+
+      const carMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 1, 4),
+        new THREE.MeshStandardMaterial({ color: 0xff0000 })
+      );
+      carMesh.castShadow = true;
+      carBody.threeMesh = carMesh;
+      scene.add(carMesh);
+
+      animate();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      world.step(1 / 60);
+
+      // Update car mesh to match physics body
+      if (carBody.threeMesh) {
+        carBody.threeMesh.position.copy(carBody.position);
+        carBody.threeMesh.quaternion.copy(carBody.quaternion);
+      }
+
+      // Update camera to follow
+      camera.position.lerp(new THREE.Vector3(
+        carBody.position.x - 5 * Math.sin(carBody.quaternion.y),
+        carBody.position.y + 3,
+        carBody.position.z - 5 * Math.cos(carBody.quaternion.y)
+      ), 0.1);
+      camera.lookAt(carBody.position);
+
+      renderer.render(scene, camera);
+
+      // Update speedometer
+      const vel = carBody.velocity.length();
+      const kmh = Math.min(200, Math.floor(vel * 3.6));
+      speedometer.textContent = `속도: ${kmh} km/h`;
+    }
+
+    // Controls
+    let accelerating = false;
+    let braking = false;
+    let turnLeft = false;
+    let turnRight = false;
+
+    document.getElementById('accelerate').onpointerdown = () => accelerating = true;
+    document.getElementById('accelerate').onpointerup = () => accelerating = false;
+    document.getElementById('brake').onpointerdown = () => braking = true;
+    document.getElementById('brake').onpointerup = () => braking = false;
+    document.getElementById('left').onpointerdown = () => turnLeft = true;
+    document.getElementById('left').onpointerup = () => turnLeft = false;
+    document.getElementById('right').onpointerdown = () => turnRight = true;
+    document.getElementById('right').onpointerup = () => turnRight = false;
+
+    setInterval(() => {
+      if (!carBody) return;
+      const forward = new CANNON.Vec3(0, 0, -1);
+      carBody.quaternion.vmult(forward, forward);
+
+      if (accelerating) {
+        carBody.velocity.x += forward.x * 0.2;
+        carBody.velocity.z += forward.z * 0.2;
+      }
+      if (braking) {
+        carBody.velocity.scale(0.95, carBody.velocity);
+      }
+      if (turnLeft) {
+        carBody.angularVelocity.y += 0.03;
+      }
+      if (turnRight) {
+        carBody.angularVelocity.y -= 0.03;
+      }
+    }, 100);
+
+    function checkOrientation() {
+      const rotateMessage = document.getElementById('rotateMessage');
+      if (window.innerHeight > window.innerWidth) {
+        rotateMessage.style.display = 'flex';
+      } else {
+        rotateMessage.style.display = 'none';
+      }
+    }
+    window.addEventListener('resize', checkOrientation);
+    checkOrientation();
+
+    init();
+  </script>
+</body>
+</html>
