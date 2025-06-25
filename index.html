@@ -2,29 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Car Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Car Driving</title>
   <style>
     html, body {
       margin: 0;
-      padding: 0;
       overflow: hidden;
       background: #000;
-    }
-    #rotateWarning {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
+      font-family: Arial, sans-serif;
       color: white;
-      padding: 20px;
-      font-size: 20px;
-      z-index: 99;
     }
     #ui {
-      position: fixed;
+      position: absolute;
       bottom: 20px;
       width: 100%;
       display: flex;
@@ -32,124 +21,143 @@
       padding: 0 20px;
       z-index: 10;
     }
-    #ui button {
-      width: 80px;
-      height: 50px;
-      font-size: 16px;
+    #leftButtons, #rightButtons {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 16px;
       border: none;
       border-radius: 10px;
       background: #4f9eff;
-      color: #fff;
+      color: white;
       font-weight: bold;
     }
-    #speed {
-      position: fixed;
-      top: 10px;
+    #speedometer {
+      position: absolute;
+      bottom: 100px;
       left: 50%;
       transform: translateX(-50%);
-      color: #fff;
-      background: rgba(0,0,0,0.5);
-      padding: 6px 12px;
-      border-radius: 8px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 14px;
+      border-radius: 12px;
       font-size: 18px;
-      z-index: 10;
     }
   </style>
 </head>
 <body>
-<div id="rotateWarning">가로 모드로 전환해주세요</div>
-<div id="speed">속도: 0 km/h</div>
-<div id="ui">
-  <div>
-    <button id="left">◀</button>
-    <button id="right">▶</button>
+  <div id="speedometer">속도: 0 km/h</div>
+  <div id="ui">
+    <div id="leftButtons">
+      <button id="leftBtn">◀ 좌</button>
+      <button id="rightBtn">우 ▶</button>
+    </div>
+    <div id="rightButtons">
+      <button id="accelBtn">엑셀</button>
+      <button id="brakeBtn">브레이크</button>
+    </div>
   </div>
-  <div>
-    <button id="accel">에센</button>
-    <button id="brake">브레이크</button>
-  </div>
-</div>
-<canvas id="game"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script>
-const canvas = document.getElementById('game');
-const renderer = new THREE.WebGLRenderer({ canvas });
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, -10);
-let carSpeed = 0, maxSpeed = 200, velocity = 0, direction = 0;
 
-const car = new THREE.Mesh(
-  new THREE.BoxGeometry(2, 1, 4),
-  new THREE.MeshStandardMaterial({ color: 0x0077ff })
-);
-car.position.y = 0.5;
-scene.add(car);
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    let scene, camera, renderer, car;
+    let velocity = 0, maxSpeed = 200;
+    let accel = 2, decel = 2;
+    let direction = 0;
+    let speedometer = document.getElementById('speedometer');
 
-const light = new THREE.HemisphereLight(0xffffff, 0x444444);
-scene.add(light);
+    init();
+    animate();
 
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000),
-  new THREE.MeshStandardMaterial({ color: 0x222222 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = 0;
-scene.add(floor);
+    function init() {
+      scene = new THREE.Scene();
 
-function resize() {
-  if (window.innerHeight > window.innerWidth) {
-    document.getElementById('rotateWarning').style.display = 'block';
-    return;
-  } else {
-    document.getElementById('rotateWarning').style.display = 'none';
-  }
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', resize);
-resize();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, -10);
+      camera.lookAt(0, 0, 0);
 
-let keys = { left: false, right: false, accel: false, brake: false };
-document.getElementById('left').onpointerdown = () => keys.left = true;
-document.getElementById('left').onpointerup = () => keys.left = false;
-document.getElementById('right').onpointerdown = () => keys.right = true;
-document.getElementById('right').onpointerup = () => keys.right = false;
-document.getElementById('accel').onpointerdown = () => keys.accel = true;
-document.getElementById('accel').onpointerup = () => keys.accel = false;
-document.getElementById('brake').onpointerdown = () => keys.brake = true;
-document.getElementById('brake').onpointerup = () => keys.brake = false;
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-function animate() {
-  requestAnimationFrame(animate);
+      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+      scene.add(light);
 
-  if (keys.left) direction += 0.02;
-  if (keys.right) direction -= 0.02;
-  if (keys.accel) velocity += 0.5;
-  if (keys.brake) velocity -= 1;
-  
-  velocity *= 0.98;
-  velocity = Math.min(Math.max(velocity, 0), maxSpeed);
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(500, 500),
+        new THREE.MeshStandardMaterial({ color: 0x222222 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
 
-  car.rotation.y += direction * 0.5;
-  car.position.x += Math.sin(car.rotation.y) * velocity * 0.01;
-  car.position.z += Math.cos(car.rotation.y) * velocity * 0.01;
+      const carGeo = new THREE.BoxGeometry(2, 1, 4);
+      const carMat = new THREE.MeshStandardMaterial({ color: 0xff4444 });
+      car = new THREE.Mesh(carGeo, carMat);
+      car.position.y = 0.5;
+      scene.add(car);
 
-  camera.position.lerp(
-    new THREE.Vector3(
-      car.position.x - Math.sin(car.rotation.y) * 10,
-      5,
-      car.position.z - Math.cos(car.rotation.y) * 10
-    ),
-    0.1
-  );
-  camera.lookAt(car.position);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
 
-  document.getElementById('speed').textContent = `속도: ${Math.round(velocity)} km/h`;
-  renderer.render(scene, camera);
-}
-animate();
-</script>
+      setupControls();
+    }
+
+    function setupControls() {
+      const leftBtn = document.getElementById('leftBtn');
+      const rightBtn = document.getElementById('rightBtn');
+      const accelBtn = document.getElementById('accelBtn');
+      const brakeBtn = document.getElementById('brakeBtn');
+
+      let left = false, right = false, accelOn = false, brake = false;
+
+      // 버튼 이벤트
+      const bind = (el, down, up) => {
+        el.addEventListener('mousedown', () => window[down] = true);
+        el.addEventListener('mouseup', () => window[down] = false);
+        el.addEventListener('touchstart', e => { e.preventDefault(); window[down] = true; });
+        el.addEventListener('touchend', () => window[down] = false);
+      };
+
+      bind(leftBtn, 'left', 'left');
+      bind(rightBtn, 'right', 'right');
+      bind(accelBtn, 'accelOn', 'accelOn');
+      bind(brakeBtn, 'brake', 'brake');
+
+      // 게임 루프 내에서 이 값 사용
+      setInterval(() => {
+        if (window.left) direction += 0.03;
+        else if (window.right) direction -= 0.03;
+        else direction *= 0.8;
+
+        if (window.accelOn) velocity += accel * 0.3;
+        else if (window.brake) velocity -= decel * 0.5;
+        else velocity -= decel * 0.1;
+
+        velocity = Math.max(0, Math.min(velocity, maxSpeed));
+      }, 30);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      car.rotation.y += direction;
+      const moveZ = velocity * 0.02;
+      car.position.x += Math.sin(car.rotation.y) * moveZ;
+      car.position.z += Math.cos(car.rotation.y) * moveZ;
+
+      // 카메라 추적
+      const camOffset = new THREE.Vector3(0, 4, -10).applyMatrix4(car.matrixWorld);
+      camera.position.lerp(camOffset, 0.1);
+      camera.lookAt(car.position);
+
+      speedometer.textContent = `속도: ${Math.floor(velocity)} km/h`;
+
+      renderer.render(scene, camera);
+    }
+  </script>
 </body>
 </html>
