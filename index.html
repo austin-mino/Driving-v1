@@ -17,26 +17,23 @@
     }
     #buttons{
       position:fixed;bottom:20px;width:100%;display:flex;justify-content:space-between;
-      padding:0 20px;z-index:10;pointer-events:none /* 버튼 영역 깜빡임 방지 */
+      padding:0 20px;z-index:10;pointer-events:none
     }
     #leftButtons,#rightButtons{display:flex;gap:10px}
     button{
       padding:14px 20px;font-size:16px;border:none;border-radius:12px;
       background:#4f9eff;color:#fff;font-weight:bold;pointer-events:auto
     }
-    #speedometer,#driftIndicator{
-      position:fixed;left:50%;transform:translateX(-50%);
+    #speedometer{
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
       background:rgba(0,0,0,.6);padding:8px 20px;border-radius:10px;
-      font-size:18px;font-weight:bold;text-align:center
+      font-size:18px;font-weight:bold
     }
-    #speedometer{bottom:80px}
-    #driftIndicator{bottom:120px;opacity:0;transition:opacity .2s}
   </style>
 </head>
 <body>
   <div id="rotateWarning">가로 모드로 전환해주세요</div>
 
-  <div id="driftIndicator">🔥 드리프트!</div>
   <div id="speedometer">속도: 0 km/h</div>
 
   <div id="buttons">
@@ -52,7 +49,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script>
-    /* ───────────────── 기기 방향 경고 ───────────────── */
+    /* ───────── 기기 방향 경고 ───────── */
     const rotateWarning = document.getElementById("rotateWarning");
     function checkOrientation(){
       rotateWarning.style.display = (window.innerHeight>window.innerWidth)?"block":"none";
@@ -61,21 +58,22 @@
     window.addEventListener("orientationchange",checkOrientation);
     checkOrientation();
 
-    /* ───────────────── 전역 변수 ───────────────── */
+    /* ───────── 전역 변수 ───────── */
     let scene,camera,renderer,car;
     let velocity = 0, maxSpeed = 200;
-    let steerAngle = 0, steerSpeed = 0.03, steerDecay = 0.006;
-    let heading = 0;                 // 실제 진행 방향 (미끄러질 때 차체 방향과 달라짐)
-    let drifting = false;
-    const driftThreshold = 0.18;     // 핸들 꺾임 한계
-    const speedThreshold = 40;       // 미끄러지기 시작할 최소 속도
+
+    /* 회전 관련: 속도를 줄인 값들 */
+    let steerVelocity = 0;          // 프레임당 회전값
+    const steerSpeed   = 0.018;     // 1회 누적량(기존 0.03 → 0.018)
+    const steerDecay   = 0.006;     // 복원 속도 유지
+    const steerLimit   = 0.25;      // 최대 회전 속도 제한(라디안)
+
     const speedDisplay = document.getElementById("speedometer");
-    const driftDisplay = document.getElementById("driftIndicator");
 
     init();
     animate();
 
-    /* ───────────────── 초기화 ───────────────── */
+    /* ───────── 초기화 ───────── */
     function init(){
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x000000);
@@ -98,7 +96,7 @@
       scene.add(new THREE.DirectionalLight(0xffffff,1).position.set(10,20,10));
       scene.add(new THREE.AmbientLight(0xffffff,0.5));
 
-      // 자동차(박스)
+      // 자동차
       const carGeo = new THREE.BoxGeometry(2,1,4);
       const carMat = new THREE.MeshStandardMaterial({color:0xff3333});
       car = new THREE.Mesh(carGeo,carMat);
@@ -114,7 +112,7 @@
       setupControls();
     }
 
-    /* ───────────────── 버튼 입력 처리 ───────────────── */
+    /* ───────── 버튼 입력 처리 ───────── */
     function setupControls(){
       let left=false,right=false,accel=false,brake=false;
 
@@ -131,59 +129,44 @@
       bind("accelBtn",v=>accel=v);
       bind("brakeBtn",v=>brake=v);
 
-      /* 입력 상태를 일정 주기로 업데이트 */
       setInterval(()=>{
-        /* 조향 */
-        if(left) steerAngle = Math.min(steerAngle + steerSpeed, 0.35);
-        else if(right) steerAngle = Math.max(steerAngle - steerSpeed, -0.35);
+        /* 조향 속도 변경 */
+        if(left)  steerVelocity = Math.min(steerVelocity + steerSpeed,  steerLimit);
+        else if(right) steerVelocity = Math.max(steerVelocity - steerSpeed, -steerLimit);
         else{
           // 자연 복귀
-          if(steerAngle>0) steerAngle = Math.max(steerAngle - steerDecay, 0);
-          else if(steerAngle<0) steerAngle = Math.min(steerAngle + steerDecay, 0);
+          if(steerVelocity>0) steerVelocity = Math.max(steerVelocity - steerDecay, 0);
+          else if(steerVelocity<0) steerVelocity = Math.min(steerVelocity + steerDecay, 0);
         }
 
-        /* 가속·제동 */
+        /* 가속/감속 */
         if(accel) velocity = Math.min(velocity + 1.2, maxSpeed);
         else if(brake) velocity = Math.max(velocity - 4, 0);
         else velocity = Math.max(velocity - 0.6, 0);
-
-        /* 드리프트 판정: 속도 + 핸들 + (브레이크 중엔 쉽게) */
-        drifting = (Math.abs(steerAngle) > driftThreshold && velocity > speedThreshold) || (brake && velocity>20 && Math.abs(steerAngle)>0.05);
-        driftDisplay.style.opacity = drifting ? 1 : 0;
       },30);
     }
 
-    /* ───────────────── 메인 루프 ───────────────── */
+    /* ───────── 메인 루프 ───────── */
     function animate(){
       requestAnimationFrame(animate);
 
-      /* 차체(시각적인 것)는 곧바로 조향 각도를 반영 */
-      car.rotation.y += steerAngle;
+      /* 차체 회전 */
+      car.rotation.y += steerVelocity;
 
-      /* 진행 방향(heading)은 그립(Grip)값에 따라 차체 방향으로 서서히 수렴
-         드리프트 시 그립을 줄여 미끄러짐 효과 */
-      const grip = drifting ? 0.05 : 0.18;
-      heading = lerpAngle(heading, car.rotation.y, grip);
-
+      /* 이동 */
       const moveZ = velocity * 0.02;
-      car.position.x += Math.sin(heading) * moveZ;
-      car.position.z += Math.cos(heading) * moveZ;
+      car.position.x += Math.sin(car.rotation.y) * moveZ;
+      car.position.z += Math.cos(car.rotation.y) * moveZ;
 
-      /* 카메라 */
+      /* 카메라 추적 */
       const cameraOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
       camera.position.lerp(cameraOffset,0.08);
       camera.lookAt(car.position);
 
-      /* UI */
+      /* 속도 표시 */
       speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
 
       renderer.render(scene,camera);
-    }
-
-    /* ───────────────── 보조 함수 ───────────────── */
-    function lerpAngle(a,b,t){
-      const diff = ((b - a + Math.PI) % (Math.PI*2)) - Math.PI;
-      return a + diff*t;
     }
   </script>
 </body>
