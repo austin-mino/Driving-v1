@@ -62,18 +62,15 @@
   let steerAngle = 0;           // 현재 핸들 각도 (rad)
   let steerTarget = 0;          // 목표 핸들 각도 (rad)
   const maxSteer = 0.7;         // 최대 핸들 각도 (rad 약 40도)
-  const steerSpeed = 0.08;      // 핸들 회전 속도 (rad/frame)
-  const steerReturnSpeed = 0.04;// 핸들 복원 속도 (rad/frame)
-
-  // 차체 조향 변수
-  let carRotationVelocity = 0;  // 차체 회전 속도 (rad/frame)
-  const carRotationDamping = 0.85; // 회전 감쇠 (0~1, 작을수록 빨리 감쇠)
-  const maxCarRotationVelocity = 0.03; // 최대 차체 회전 속도
 
   // 조작 상태
   let pressingLeft = false, pressingRight = false, pressingAccel = false, pressingBrake = false;
 
   const speedDisplay = document.getElementById("speedometer");
+
+  // 차량 물리 상수
+  const wheelBase = 2.5; // 앞뒤 바퀴 간 거리 (가상값)
+  const maxCarRotationVelocity = 0.03; // 최대 차체 회전 속도
 
   init();
   animate();
@@ -145,54 +142,62 @@
   function animate() {
     requestAnimationFrame(animate);
 
-    // 1) 핸들 목표 각도 조정
-    if (pressingLeft) steerTarget = Math.min(steerTarget + 0.04, maxSteer);
-    else if (pressingRight) steerTarget = Math.max(steerTarget - 0.04, -maxSteer);
+    // 1) 핸들 목표 각도 조정 (부드럽게 증가/감소)
+    const steerIncrement = 0.03;
+    if (pressingLeft) steerTarget = Math.min(steerTarget + steerIncrement, maxSteer);
+    else if (pressingRight) steerTarget = Math.max(steerTarget - steerIncrement, -maxSteer);
     else {
-      // 복원 방향 결정
-      if (steerTarget > 0) steerTarget = Math.max(steerTarget - steerReturnSpeed, 0);
-      else if (steerTarget < 0) steerTarget = Math.min(steerTarget + steerReturnSpeed, 0);
+      // 핸들 복원
+      steerTarget *= 0.9;
+      if (Math.abs(steerTarget) < 0.01) steerTarget = 0;
     }
 
-    // 2) 핸들 실제 각도 부드럽게 변화 (물리적 반응 느낌)
-    if (steerAngle < steerTarget) {
-      steerAngle = Math.min(steerAngle + steerSpeed, steerTarget);
-    } else if (steerAngle > steerTarget) {
-      steerAngle = Math.max(steerAngle - steerSpeed, steerTarget);
+    // 2) 핸들 실제 각도 부드럽게 변화
+    steerAngle += (steerTarget - steerAngle) * 0.2;
+
+    // 3) 차량 이동 및 회전 물리
+    // 회전 반경 = wheelBase / tan(steerAngle)
+    let turnRadius;
+    if (Math.abs(steerAngle) < 0.001) {
+      turnRadius = Infinity; // 직진
+    } else {
+      turnRadius = wheelBase / Math.tan(steerAngle);
     }
 
-    // 3) 차체 회전 속도 계산: 핸들 각도와 속도에 비례
-    const targetRotationVelocity = steerAngle * velocity * 0.005; // 계수 조절 가능
-    // 회전 속도 점진적 변화 (부드러운 가속/감속)
-    carRotationVelocity += (targetRotationVelocity - carRotationVelocity) * 0.2;
-    // 회전 속도 제한
-    carRotationVelocity = Math.max(Math.min(carRotationVelocity, maxCarRotationVelocity), -maxCarRotationVelocity);
-
-    // 4) 차체 회전 감쇠 (관성 느낌)
-    carRotationVelocity *= carRotationDamping;
-
-    // 5) 차체 실제 회전 적용
-    car.rotation.y += carRotationVelocity;
-
-    // 6) 전진 거리 계산
+    // 차량 전진 거리 (속도 스케일)
     const moveStep = velocity * 0.02;
-    car.position.x += Math.sin(car.rotation.y) * moveStep;
-    car.position.z += Math.cos(car.rotation.y) * moveStep;
 
-    // 7) 핸들 회전 적용 (핸들 회전은 좀 크게, 자연스럽게)
+    if (turnRadius === Infinity) {
+      // 직진
+      car.position.x += Math.sin(car.rotation.y) * moveStep;
+      car.position.z += Math.cos(car.rotation.y) * moveStep;
+    } else {
+      // 원호 운동: 차량 각도 변화량 = moveStep / turnRadius
+      const angularVelocity = moveStep / turnRadius;
+      car.rotation.y += angularVelocity;
+
+      // 차량 위치 원호 좌표 계산
+      const cx = car.position.x - turnRadius * Math.cos(car.rotation.y);
+      const cz = car.position.z + turnRadius * Math.sin(car.rotation.y);
+
+      car.position.x = cx + turnRadius * Math.cos(car.rotation.y);
+      car.position.z = cz - turnRadius * Math.sin(car.rotation.y);
+    }
+
+    // 4) 핸들 회전 시각화 (실제 핸들보다 좀 더 크게 회전)
     steeringWheel.rotation.z = -steerAngle * 2;
 
-    // 8) 속도 조절 (엑셀/브레이크/감속)
+    // 5) 속도 조절 (엑셀/브레이크/감속)
     if (pressingAccel) velocity = Math.min(velocity + 1.5, maxSpeed);
     else if (pressingBrake) velocity = Math.max(velocity - 5, 0);
-    else velocity = Math.max(velocity - 0.8, 0);
+    else velocity = Math.max(velocity - 0.5, 0);
 
-    // 9) 카메라 뒤쪽에 부드럽게 위치시키기
+    // 6) 카메라 뒤쪽에 부드럽게 위치시키기
     const camOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
     camera.position.lerp(camOffset, 0.08);
     camera.lookAt(car.position);
 
-    // 10) 속도 표시 업데이트
+    // 7) 속도 표시 업데이트
     speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
 
     renderer.render(scene, camera);
