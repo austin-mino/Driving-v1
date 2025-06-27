@@ -3,170 +3,236 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>완전한 테트리스</title>
+<title>실제 자동차처럼 디자인한 3D 자동차</title>
 <style>
-  body {
-    background: #121725;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: monospace;
-    color: #fff;
+  body { margin:0; overflow:hidden; background:#000; color:#fff; font-family: Arial,sans-serif;}
+  #rotateWarning {
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:rgba(0,0,0,0.8); padding:20px; border-radius:10px;
+    display:none; z-index:99;
   }
-  #game {
-    display: grid;
-    grid-template-columns: repeat(10, 30px);
-    grid-template-rows: repeat(20, 30px);
-    gap: 2px;
-    background: #1e2233;
-    padding: 5px;
-    border: 4px solid #333;
+  #buttons {
+    position:fixed; bottom:20px; width:100%; display:flex; justify-content:space-between;
+    padding: 0 20px; z-index:10; pointer-events:none;
   }
-  .cell {
-    width: 30px;
-    height: 30px;
-    background: #121725;
-    border-radius: 3px;
+  #leftButtons, #rightButtons { display:flex; gap:10px; }
+  button {
+    padding:14px 20px; font-size:16px; border:none; border-radius:12px;
+    background:#4f9eff; color:#fff; font-weight:bold; pointer-events:auto;
   }
-  .I { background: #2cdfd4; }
-  .J { background: #2c6cdf; }
-  .L { background: #df852c; }
-  .O { background: #dfce2c; }
-  .S { background: #2cdf6d; }
-  .Z { background: #df2c2c; }
-  .T { background: #a32cdf; }
+  #speedometer {
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.6); padding:10px 20px; border-radius:10px;
+    font-size:18px; font-weight:bold;
+  }
 </style>
 </head>
 <body>
-  <div id="game"></div>
-  <script>
-    const COLS = 10, ROWS = 20;
-    const COLORS = {I:'I', J:'J', L:'L', O:'O', S:'S', Z:'Z', T:'T'};
 
-    const BLOCKS = {
-      I: [[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]]],
-      J: [[[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
-      L: [[[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
-      O: [[[0,1,1,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]]],
-      S: [[[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]]],
-      Z: [[[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]]],
-      T: [[[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
-    };
+<div id="rotateWarning">가로 모드로 전환해주세요</div>
+<div id="speedometer">속도: 0 km/h</div>
+<div id="buttons">
+  <div id="leftButtons">
+    <button id="leftBtn">◀ 좌</button>
+    <button id="rightBtn">우 ▶</button>
+  </div>
+  <div id="rightButtons">
+    <button id="accelBtn">엑셀</button>
+    <button id="brakeBtn">브레이크</button>
+  </div>
+</div>
 
-    let board = Array.from({length: ROWS}, _ => Array(COLS).fill(0));
-    let gameDiv = document.getElementById('game');
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script>
+  const rotateWarning = document.getElementById("rotateWarning");
+  function checkOrientation() {
+    rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
+  }
+  window.addEventListener("resize", checkOrientation);
+  window.addEventListener("orientationchange", checkOrientation);
+  checkOrientation();
 
-    function randomBlock() {
-      const keys = Object.keys(BLOCKS);
-      const type = keys[Math.floor(Math.random()*keys.length)];
-      const shape = BLOCKS[type][0].map(r=>r.slice());
-      return {type, shape, row: -1, col: 3};
+  let scene, camera, renderer, car;
+  let velocity = 0;
+  const maxSpeed = 200;
+
+  let steerAngle = 0;
+  let steerTarget = 0;
+  const maxSteer = 0.7;
+
+  let pressingLeft = false, pressingRight = false, pressingAccel = false, pressingBrake = false;
+
+  const speedDisplay = document.getElementById("speedometer");
+  const wheelBase = 2.5;
+
+  init();
+  animate();
+
+  function createCarModel() {
+    const carGroup = new THREE.Group();
+
+    // 차체 - 바디 (둥글게 각진 박스)
+    const bodyGeo = new THREE.BoxGeometry(3, 1, 6);
+    const bodyMat = new THREE.MeshStandardMaterial({color: 0xff2222, metalness:0.6, roughness:0.4});
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.75;
+    carGroup.add(body);
+
+    // 지붕 - 둥근 박스
+    const roofGeo = new THREE.BoxGeometry(2.5, 0.5, 3);
+    const roofMat = new THREE.MeshStandardMaterial({color: 0xaa2222, metalness:0.5, roughness:0.5});
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, 1.3, 0);
+    carGroup.add(roof);
+
+    // 창문 (앞뒤, 좌우)
+    const windowMat = new THREE.MeshStandardMaterial({color: 0x5555aa, opacity: 0.5, transparent: true, roughness: 0.1});
+    const frontWindowGeo = new THREE.BoxGeometry(2.3, 0.5, 0.05);
+    const frontWindow = new THREE.Mesh(frontWindowGeo, windowMat);
+    frontWindow.position.set(0, 1.2, -1.4);
+    carGroup.add(frontWindow);
+
+    const rearWindow = frontWindow.clone();
+    rearWindow.position.set(0, 1.2, 1.4);
+    carGroup.add(rearWindow);
+
+    const leftWindowGeo = new THREE.BoxGeometry(0.05, 0.5, 3);
+    const leftWindow = new THREE.Mesh(leftWindowGeo, windowMat);
+    leftWindow.position.set(-1.25, 1.2, 0);
+    carGroup.add(leftWindow);
+
+    const rightWindow = leftWindow.clone();
+    rightWindow.position.set(1.25, 1.2, 0);
+    carGroup.add(rightWindow);
+
+    // 바퀴 (4개)
+    const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.4, 24);
+    const wheelMat = new THREE.MeshStandardMaterial({color: 0x222222, metalness:0.7, roughness:0.6});
+    // 바퀴는 회전축 맞추려고 x축으로 돌려야 함
+    for (let i=0; i<4; i++) {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      const xPos = (i < 2) ? -1.1 : 1.1;
+      const zPos = (i % 2 === 0) ? -2.3 : 2.3;
+      wheel.position.set(xPos, 0.3, zPos);
+      carGroup.add(wheel);
     }
 
-    let current = randomBlock();
+    return carGroup;
+  }
 
-    function rotate(m) {
-      const N = m.length, r = Array.from({length:N}, _=>Array(N).fill(0));
-      for(let i=0;i<N;i++)for(let j=0;j<N;j++) r[j][N-1-i]=m[i][j];
-      return r;
-    }
+  function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
 
-    function collides(s, r, c) {
-      for(let i=0;i<s.length;i++)for(let j=0;j<s[i].length;j++) {
-        if(s[i][j]) {
-          const x=c+j, y=r+i;
-          if(x<0||x>=COLS||y>=ROWS|| (y>=0 && board[y][x])) return true;
-        }
-      }
-      return false;
-    }
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, -10);
 
-    function wallKick(rot, r, c) {
-      for(const d of [0,-1,1,-2,2]) {
-        if(!collides(rot, r, c+d)) return c+d;
-      }
-      return null;
-    }
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    function rotateCurrent() {
-      const nr = rotate(current.shape);
-      if(!collides(nr, current.row, current.col)) current.shape = nr;
-      else {
-        const nc = wallKick(nr, current.row, current.col);
-        if(nc !== null) {
-          current.shape = nr;
-          current.col = nc;
-        }
-      }
-    }
+    // 바닥
+    const floorGeo = new THREE.PlaneGeometry(1000, 1000);
+    const floorMat = new THREE.MeshStandardMaterial({color: 0x333333});
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI/2;
+    scene.add(floor);
 
-    function fix() {
-      current.shape.forEach((r,i) => r.forEach((v,j) => {
-        if(v && current.row+i>=0) board[current.row+i][current.col+j] = current.type;
-      }));
-    }
+    // 조명
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-    function clearLines() {
-      for(let y=ROWS-1; y>=0; y--) {
-        if(board[y].every(v=>v)) {
-          board.splice(y,1);
-          board.unshift(Array(COLS).fill(0));
-          y++;
-        }
-      }
-    }
+    // 자동차 생성
+    car = createCarModel();
+    scene.add(car);
 
-    function moveDown() {
-      if(!collides(current.shape, current.row+1, current.col)) {
-        current.row++;
-      } else {
-        fix();
-        clearLines();
-        current = randomBlock();
-        if(collides(current.shape, current.row, current.col)) {
-          board = Array.from({length: ROWS}, _ => Array(COLS).fill(0));
-          alert('게임 오버!');
-        }
-      }
-      draw();
-    }
-
-    function move(dx) {
-      if(!collides(current.shape, current.row, current.col + dx)) current.col += dx;
-      draw();
-    }
-
-    document.addEventListener('keydown', e => {
-      if(e.code==='ArrowLeft') move(-1);
-      else if(e.code==='ArrowRight') move(1);
-      else if(e.code==='ArrowUp') rotateCurrent();
-      else if(e.code==='ArrowDown') moveDown();
+    // 리사이즈 대응
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    function draw() {
-      gameDiv.innerHTML = '';
-      for(let y=0;y<ROWS;y++) {
-        for(let x=0;x<COLS;x++){
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          if(board[y][x]) cell.classList.add(COLORS[board[y][x]]);
-          gameDiv.appendChild(cell);
-        }
-      }
-      current.shape.forEach((r,i)=>r.forEach((v,j)=>{
-        const y = current.row+i, x = current.col+j;
-        if(v && y>=0) gameDiv.children[y*COLS + x].classList.add(COLORS[current.type]);
-      }));
+    setupControls();
+  }
+
+  function setupControls() {
+    function bind(id, fn) {
+      const btn = document.getElementById(id);
+      btn.addEventListener("mousedown", () => fn(true));
+      btn.addEventListener("mouseup", () => fn(false));
+      btn.addEventListener("mouseleave", () => fn(false));
+      btn.addEventListener("touchstart", e => { e.preventDefault(); fn(true); });
+      btn.addEventListener("touchend", () => fn(false));
     }
 
-    function startGame() {
-      setInterval(moveDown, 500);
-      draw();
+    bind("leftBtn", v => pressingLeft = v);
+    bind("rightBtn", v => pressingRight = v);
+    bind("accelBtn", v => pressingAccel = v);
+    bind("brakeBtn", v => pressingBrake = v);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // 조향 각도 조절 (부드럽게)
+    const steerIncrement = 0.015;
+    if (pressingLeft) steerTarget = Math.min(steerTarget + steerIncrement, maxSteer);
+    else if (pressingRight) steerTarget = Math.max(steerTarget - steerIncrement, -maxSteer);
+    else {
+      steerTarget *= 0.95;
+      if (Math.abs(steerTarget) < 0.005) steerTarget = 0;
     }
 
-    window.onload = startGame;
-  </script>
+    steerAngle += (steerTarget - steerAngle) * 0.1;
+
+    // 차량 이동 및 회전
+    let turnRadius;
+    if (Math.abs(steerAngle) < 0.001) {
+      turnRadius = Infinity;
+    } else {
+      turnRadius = wheelBase / Math.tan(steerAngle);
+    }
+
+    const moveStep = velocity * 0.02;
+
+    if (turnRadius === Infinity) {
+      car.position.x += Math.sin(car.rotation.y) * moveStep;
+      car.position.z += Math.cos(car.rotation.y) * moveStep;
+    } else {
+      const angularVelocityRaw = moveStep / turnRadius;
+      const damping = 0.7;
+      const angularVelocity = angularVelocityRaw * damping;
+      const maxAngularVelocity = 0.015;
+      const clampedAngularVelocity = Math.max(-maxAngularVelocity, Math.min(maxAngularVelocity, angularVelocity));
+
+      car.rotation.y += clampedAngularVelocity;
+
+      const cx = car.position.x - turnRadius * Math.cos(car.rotation.y);
+      const cz = car.position.z + turnRadius * Math.sin(car.rotation.y);
+
+      car.position.x = cx + turnRadius * Math.cos(car.rotation.y);
+      car.position.z = cz - turnRadius * Math.sin(car.rotation.y);
+    }
+
+    // 속도 조절
+    if (pressingAccel) velocity = Math.min(velocity + 1.5, maxSpeed);
+    else if (pressingBrake) velocity = Math.max(velocity - 5, 0);
+    else velocity = Math.max(velocity - 0.5, 0);
+
+    // 카메라 위치
+    const camOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
+    camera.position.lerp(camOffset, 0.08);
+    camera.lookAt(car.position);
+
+    // 속도 표시
+    speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
+
+    renderer.render(scene, camera);
+  }
+</script>
 </body>
 </html>
