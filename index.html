@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>현실적인 3D 자동차 핸들</title>
+<title>3D</title>
 <style>
   body { margin:0; overflow:hidden; background:#000; color:#fff; font-family: Arial,sans-serif;}
   #rotateWarning {
@@ -44,7 +44,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 <script>
-  // 화면 방향 체크
   const rotateWarning = document.getElementById("rotateWarning");
   function checkOrientation() {
     rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? "block" : "none";
@@ -53,27 +52,74 @@
   window.addEventListener("orientationchange", checkOrientation);
   checkOrientation();
 
-  // 주요 변수
-  let scene, camera, renderer, car, steeringWheel;
+  let scene, camera, renderer, car;
   let velocity = 0;
   const maxSpeed = 200;
 
-  // 핸들 실제 물리 변수
-  let steerAngle = 0;           // 현재 핸들 각도 (rad)
-  let steerTarget = 0;          // 목표 핸들 각도 (rad)
-  const maxSteer = 0.7;         // 최대 핸들 각도 (rad 약 40도)
+  let steerAngle = 0;
+  let steerTarget = 0;
+  const maxSteer = 0.7;
 
-  // 조작 상태
   let pressingLeft = false, pressingRight = false, pressingAccel = false, pressingBrake = false;
 
   const speedDisplay = document.getElementById("speedometer");
-
-  // 차량 물리 상수
-  const wheelBase = 2.5; // 앞뒤 바퀴 간 거리 (가상값)
-  const maxCarRotationVelocity = 0.03; // 최대 차체 회전 속도
+  const wheelBase = 2.5;
 
   init();
   animate();
+
+  function createCarModel() {
+    const carGroup = new THREE.Group();
+
+    // 차체 - 바디 (둥글게 각진 박스)
+    const bodyGeo = new THREE.BoxGeometry(3, 1, 6);
+    const bodyMat = new THREE.MeshStandardMaterial({color: 0xff2222, metalness:0.6, roughness:0.4});
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.75;
+    carGroup.add(body);
+
+    // 지붕 - 둥근 박스
+    const roofGeo = new THREE.BoxGeometry(2.5, 0.5, 3);
+    const roofMat = new THREE.MeshStandardMaterial({color: 0xaa2222, metalness:0.5, roughness:0.5});
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, 1.3, 0);
+    carGroup.add(roof);
+
+    // 창문 (앞뒤, 좌우)
+    const windowMat = new THREE.MeshStandardMaterial({color: 0x5555aa, opacity: 0.5, transparent: true, roughness: 0.1});
+    const frontWindowGeo = new THREE.BoxGeometry(2.3, 0.5, 0.05);
+    const frontWindow = new THREE.Mesh(frontWindowGeo, windowMat);
+    frontWindow.position.set(0, 1.2, -1.4);
+    carGroup.add(frontWindow);
+
+    const rearWindow = frontWindow.clone();
+    rearWindow.position.set(0, 1.2, 1.4);
+    carGroup.add(rearWindow);
+
+    const leftWindowGeo = new THREE.BoxGeometry(0.05, 0.5, 3);
+    const leftWindow = new THREE.Mesh(leftWindowGeo, windowMat);
+    leftWindow.position.set(-1.25, 1.2, 0);
+    carGroup.add(leftWindow);
+
+    const rightWindow = leftWindow.clone();
+    rightWindow.position.set(1.25, 1.2, 0);
+    carGroup.add(rightWindow);
+
+    // 바퀴 (4개)
+    const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.4, 24);
+    const wheelMat = new THREE.MeshStandardMaterial({color: 0x222222, metalness:0.7, roughness:0.6});
+    // 바퀴는 회전축 맞추려고 x축으로 돌려야 함
+    for (let i=0; i<4; i++) {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      const xPos = (i < 2) ? -1.1 : 1.1;
+      const zPos = (i % 2 === 0) ? -2.3 : 2.3;
+      wheel.position.set(xPos, 0.3, zPos);
+      carGroup.add(wheel);
+    }
+
+    return carGroup;
+  }
 
   function init() {
     scene = new THREE.Scene();
@@ -99,19 +145,9 @@
     scene.add(dirLight);
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-    // 자동차 본체 (박스)
-    const carGeo = new THREE.BoxGeometry(2, 1, 4);
-    const carMat = new THREE.MeshStandardMaterial({color: 0xff3333});
-    car = new THREE.Mesh(carGeo, carMat);
-    car.position.y = 0.5;
+    // 자동차 생성
+    car = createCarModel();
     scene.add(car);
-
-    // 핸들 (토러스 링)
-    const steeringGeo = new THREE.TorusGeometry(0.8, 0.1, 16, 100);
-    const steeringMat = new THREE.MeshStandardMaterial({color: 0x222222, metalness:0.7, roughness:0.3});
-    steeringWheel = new THREE.Mesh(steeringGeo, steeringMat);
-    steeringWheel.position.set(0, 1.2, 1.2); // 차 앞쪽 위
-    car.add(steeringWheel);
 
     // 리사이즈 대응
     window.addEventListener("resize", () => {
@@ -142,41 +178,39 @@
   function animate() {
     requestAnimationFrame(animate);
 
-    // 1) 핸들 목표 각도 조정 (부드럽게 증가/감소)
-    const steerIncrement = 0.03;
+    // 조향 각도 조절 (부드럽게)
+    const steerIncrement = 0.015;
     if (pressingLeft) steerTarget = Math.min(steerTarget + steerIncrement, maxSteer);
     else if (pressingRight) steerTarget = Math.max(steerTarget - steerIncrement, -maxSteer);
     else {
-      // 핸들 복원
-      steerTarget *= 0.9;
-      if (Math.abs(steerTarget) < 0.01) steerTarget = 0;
+      steerTarget *= 0.95;
+      if (Math.abs(steerTarget) < 0.005) steerTarget = 0;
     }
 
-    // 2) 핸들 실제 각도 부드럽게 변화
-    steerAngle += (steerTarget - steerAngle) * 0.2;
+    steerAngle += (steerTarget - steerAngle) * 0.1;
 
-    // 3) 차량 이동 및 회전 물리
-    // 회전 반경 = wheelBase / tan(steerAngle)
+    // 차량 이동 및 회전
     let turnRadius;
     if (Math.abs(steerAngle) < 0.001) {
-      turnRadius = Infinity; // 직진
+      turnRadius = Infinity;
     } else {
       turnRadius = wheelBase / Math.tan(steerAngle);
     }
 
-    // 차량 전진 거리 (속도 스케일)
     const moveStep = velocity * 0.02;
 
     if (turnRadius === Infinity) {
-      // 직진
       car.position.x += Math.sin(car.rotation.y) * moveStep;
       car.position.z += Math.cos(car.rotation.y) * moveStep;
     } else {
-      // 원호 운동: 차량 각도 변화량 = moveStep / turnRadius
-      const angularVelocity = moveStep / turnRadius;
-      car.rotation.y += angularVelocity;
+      const angularVelocityRaw = moveStep / turnRadius;
+      const damping = 0.7;
+      const angularVelocity = angularVelocityRaw * damping;
+      const maxAngularVelocity = 0.015;
+      const clampedAngularVelocity = Math.max(-maxAngularVelocity, Math.min(maxAngularVelocity, angularVelocity));
 
-      // 차량 위치 원호 좌표 계산
+      car.rotation.y += clampedAngularVelocity;
+
       const cx = car.position.x - turnRadius * Math.cos(car.rotation.y);
       const cz = car.position.z + turnRadius * Math.sin(car.rotation.y);
 
@@ -184,20 +218,17 @@
       car.position.z = cz - turnRadius * Math.sin(car.rotation.y);
     }
 
-    // 4) 핸들 회전 시각화 (실제 핸들보다 좀 더 크게 회전)
-    steeringWheel.rotation.z = -steerAngle * 2;
-
-    // 5) 속도 조절 (엑셀/브레이크/감속)
+    // 속도 조절
     if (pressingAccel) velocity = Math.min(velocity + 1.5, maxSpeed);
     else if (pressingBrake) velocity = Math.max(velocity - 5, 0);
     else velocity = Math.max(velocity - 0.5, 0);
 
-    // 6) 카메라 뒤쪽에 부드럽게 위치시키기
+    // 카메라 위치
     const camOffset = new THREE.Vector3(0,4,-10).applyMatrix4(car.matrixWorld);
     camera.position.lerp(camOffset, 0.08);
     camera.lookAt(car.position);
 
-    // 7) 속도 표시 업데이트
+    // 속도 표시
     speedDisplay.textContent = `속도: ${Math.floor(velocity)} km/h`;
 
     renderer.render(scene, camera);
