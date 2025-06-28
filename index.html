@@ -5,17 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cannon-es 물리엔진 + 기어 레버 (카메라/엔진 수정)</title>
 <style>
-  body{margin:0;overflow:hidden;background:#000;font-family:sans-serif;color:#fff}
-  #rotateWarning{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    padding:20px;border-radius:10px;background:rgba(0,0,0,.8);display:none;z-index:99}
-  #buttons{position:fixed;bottom:20px;left:20px;display:flex;gap:10px;pointer-events:none;z-index:10}
-  button{padding:14px 18px;border:none;border-radius:10px;background:#4f9eff;color:#fff;font-weight:700;font-size:16px;pointer-events:auto}
-  #leverBox{position:fixed;right:20px;bottom:20px;width:60px;height:220px;background:#222;border-radius:12px;
-    padding:8px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;z-index:10}
-  .gearSlot{flex:1;background:#333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700}
-  #leverKnob{position:absolute;left:calc(50% - 12px);width:24px;height:24px;border-radius:50%;background:#ff9b00;transition:top .15s}
-  #hud{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);text-align:center;
-    background:rgba(0,0,0,.6);padding:10px 20px;border-radius:10px;font-weight:700}
+  @media (orientation: portrait) {
+    #buttons {
+      flex-direction: column;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      gap: 10px;
+    }
+    #leverBox {
+      width: 60px;
+      height: 220px;
+      right: 50%;
+      transform: translateX(80px);
+      bottom: 80px;
+    }
+    #hud {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  /* rotateWarning 숨김 처리 */
+  #rotateWarning { display: none !important; }
 </style>
 </head>
 <body>
