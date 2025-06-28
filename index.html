@@ -43,129 +43,7 @@
     pointer-events: auto;
     user-select: none;
   }
-</style><!-- 파트2: 기어 변속 레버 UI + 기어 변속 로직 -->
-
-<style>
-  /* 변속 레버 박스 */
-  #leverBox {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 60px;
-    height: 220px;
-    background: #222;
-    border-radius: 12px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 6px;
-    z-index: 20;
-  }
-  .gearSlot {
-    flex: 1;
-    background: #333;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: #eee;
-    user-select: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  .gearSlot:hover {
-    background-color: #555;
-  }
-  #leverKnob {
-    position: absolute;
-    left: calc(50% - 12px);
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #ff9b00;
-    transition: top 0.15s ease;
-    pointer-events: none;
-  }
-  #leverContainer {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 60px;
-    height: 220px;
-    user-select: none;
-  }
 </style>
-
-<div id="leverContainer">
-  <div id="leverBox">
-    <div class="gearSlot" data-gear="P">P</div>
-    <div class="gearSlot" data-gear="R">R</div>
-    <div class="gearSlot" data-gear="N">N</div>
-    <div class="gearSlot" data-gear="D">D</div>
-  </div>
-  <div id="leverKnob"></div>
-</div>
-
-<script>
-  // HTML 요소 참조
-  const leverKnob = document.getElementById('leverKnob');
-  const gearSlots = [...document.querySelectorAll('.gearSlot')];
-
-  // 현재 기어 상태 (파트1 변수 currentGear와 연동 가능)
-  let currentGear = 'P';
-
-  // 기어 변경 시 조건 검사
-  function canShiftGear(newGear, speed, oldGear) {
-    // 속도에 따른 변속 제한 예시 (임의 조절 가능)
-    if(newGear === oldGear) return false; // 같은 기어 불가
-    if((newGear === 'R' && speed > 1) || (newGear === 'P' && speed > 0.1)) return false;
-    if((newGear === 'D' && oldGear === 'R' && speed > 1) || (newGear === 'R' && oldGear === 'D' && speed > 1)) return false;
-    return true;
-  }
-
-  // 레버 UI 위치 업데이트 함수
-  function updateLeverUI() {
-    const slot = gearSlots.find(s => s.dataset.gear === currentGear);
-    if (!slot) return;
-    const rect = slot.getBoundingClientRect();
-    const parentRect = slot.parentElement.getBoundingClientRect();
-    leverKnob.style.top = `${rect.top - parentRect.top + rect.height / 2 - 12}px`;
-  }
-
-  updateLeverUI();
-
-  // 기어 변경 함수 (파트1의 setGear와 연동하거나 별도로 관리 가능)
-  function tryShiftGear(newGear) {
-    // 파트1의 chassisBody 속도 가져오기 (예: chassisBody.velocity.length())
-    const speed = chassisBody ? chassisBody.velocity.length() : 0;
-
-    if (!canShiftGear(newGear, speed, currentGear)) return;
-
-    currentGear = newGear;
-    updateLeverUI();
-
-    // HUD에 기어 표시
-    const speedometer = document.getElementById('speedometer');
-    if(speedometer) speedometer.textContent = `속도: ${Math.round(speed * 3.6)} km/h | 기어: ${currentGear}`;
-
-    // 파트1의 기어 상태도 변경
-    if(typeof setGear === 'function') setGear(currentGear);
-  }
-
-  // 기어 슬롯 클릭 이벤트 연결
-  gearSlots.forEach(slot => {
-    slot.addEventListener('click', () => tryShiftGear(slot.dataset.gear));
-    slot.addEventListener('touchstart', e => {
-      e.preventDefault();
-      tryShiftGear(slot.dataset.gear);
-    });
-  });
-
-  // 윈도우 리사이즈 등으로 UI 재배치 필요 시 호출
-  window.addEventListener('resize', updateLeverUI);
-</script>
 </head>
 <body>
 
@@ -415,6 +293,130 @@
   }
   animate();
 
+</script>
+</body>
+</html><!-- 파트2: 기어 변속 레버 UI + 기어 변속 로직 -->
+
+<style>
+  /* 변속 레버 박스 */
+  #leverBox {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 60px;
+    height: 220px;
+    background: #222;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    z-index: 20;
+  }
+  .gearSlot {
+    flex: 1;
+    background: #333;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #eee;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .gearSlot:hover {
+    background-color: #555;
+  }
+  #leverKnob {
+    position: absolute;
+    left: calc(50% - 12px);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff9b00;
+    transition: top 0.15s ease;
+    pointer-events: none;
+  }
+  #leverContainer {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 60px;
+    height: 220px;
+    user-select: none;
+  }
+</style>
+
+<div id="leverContainer">
+  <div id="leverBox">
+    <div class="gearSlot" data-gear="P">P</div>
+    <div class="gearSlot" data-gear="R">R</div>
+    <div class="gearSlot" data-gear="N">N</div>
+    <div class="gearSlot" data-gear="D">D</div>
+  </div>
+  <div id="leverKnob"></div>
+</div>
+
+<script>
+  // HTML 요소 참조
+  const leverKnob = document.getElementById('leverKnob');
+  const gearSlots = [...document.querySelectorAll('.gearSlot')];
+
+  // 현재 기어 상태 (파트1 변수 currentGear와 연동 가능)
+  let currentGear = 'P';
+
+  // 기어 변경 시 조건 검사
+  function canShiftGear(newGear, speed, oldGear) {
+    // 속도에 따른 변속 제한 예시 (임의 조절 가능)
+    if(newGear === oldGear) return false; // 같은 기어 불가
+    if((newGear === 'R' && speed > 1) || (newGear === 'P' && speed > 0.1)) return false;
+    if((newGear === 'D' && oldGear === 'R' && speed > 1) || (newGear === 'R' && oldGear === 'D' && speed > 1)) return false;
+    return true;
+  }
+
+  // 레버 UI 위치 업데이트 함수
+  function updateLeverUI() {
+    const slot = gearSlots.find(s => s.dataset.gear === currentGear);
+    if (!slot) return;
+    const rect = slot.getBoundingClientRect();
+    const parentRect = slot.parentElement.getBoundingClientRect();
+    leverKnob.style.top = `${rect.top - parentRect.top + rect.height / 2 - 12}px`;
+  }
+
+  updateLeverUI();
+
+  // 기어 변경 함수 (파트1의 setGear와 연동하거나 별도로 관리 가능)
+  function tryShiftGear(newGear) {
+    // 파트1의 chassisBody 속도 가져오기 (예: chassisBody.velocity.length())
+    const speed = chassisBody ? chassisBody.velocity.length() : 0;
+
+    if (!canShiftGear(newGear, speed, currentGear)) return;
+
+    currentGear = newGear;
+    updateLeverUI();
+
+    // HUD에 기어 표시
+    const speedometer = document.getElementById('speedometer');
+    if(speedometer) speedometer.textContent = `속도: ${Math.round(speed * 3.6)} km/h | 기어: ${currentGear}`;
+
+    // 파트1의 기어 상태도 변경
+    if(typeof setGear === 'function') setGear(currentGear);
+  }
+
+  // 기어 슬롯 클릭 이벤트 연결
+  gearSlots.forEach(slot => {
+    slot.addEventListener('click', () => tryShiftGear(slot.dataset.gear));
+    slot.addEventListener('touchstart', e => {
+      e.preventDefault();
+      tryShiftGear(slot.dataset.gear);
+    });
+  });
+
+  // 윈도우 리사이즈 등으로 UI 재배치 필요 시 호출
+  window.addEventListener('resize', updateLeverUI);
 </script><script type="module">
 // 파트3 코드 시작
 
@@ -504,5 +506,3 @@ animate();
 
 // 파트3 코드 끝
 </script>
-</body>
-</html>
