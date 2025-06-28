@@ -3,231 +3,196 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>3D 자동차 게임</title>
+<title>실제 자동차 물리엔진 게임 (모바일 터치 기어 변속 포함)</title>
 <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: #111;
-    font-family: Arial, sans-serif;
-    color: white;
-  }
-  /* UI 배치 */
-  #leftControls {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    display: flex;
-    gap: 12px;
-  }
-  #leftControls button {
-    padding: 16px 20px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: none;
-    background: #4f9eff;
-    color: white;
-    font-weight: bold;
-    user-select: none;
-  }
-  #rightControls {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 12px;
-  }
-  #rightControls button {
-    padding: 16px 20px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: none;
-    background: #4f9eff;
-    color: white;
-    font-weight: bold;
-    user-select: none;
+  body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: Arial, sans-serif; }
+  #speedBox {
+    position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 10px 20px;
+    border-radius: 10px; font-weight: bold; font-size: 18px; z-index: 10;
   }
   #gearBox {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.6);
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 22px;
-    font-weight: bold;
-    user-select: none;
+    position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.6);
+    padding: 10px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10;
   }
-  #speedBox {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: rgba(0,0,0,0.6);
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 22px;
-    font-weight: bold;
-    user-select: none;
+  .gearButton {
+    background: #4f9eff; border: none; border-radius: 8px; padding: 12px 16px;
+    font-weight: bold; font-size: 18px; color: #fff; user-select: none;
+    touch-action: manipulation;
+  }
+  .gearButton.active {
+    background: #ff9b00;
+  }
+  #buttonsLeft {
+    position: fixed; bottom: 20px; left: 20px; display: flex; gap: 12px; z-index: 10;
+  }
+  #buttonsRight {
+    position: fixed; bottom: 20px; right: 20px; display: flex; gap: 12px; z-index: 10;
+  }
+  button.controlBtn {
+    padding: 14px 20px; font-size: 16px; border: none; border-radius: 12px;
+    background: #4f9eff; color: #fff; font-weight: bold; user-select: none;
+    touch-action: manipulation;
   }
 </style>
 </head>
 <body>
 
-<!-- UI -->
-<div id="leftControls">
-  <button id="leftBtn">◀ 좌</button>
-  <button id="rightBtn">우 ▶</button>
-</div>
-<div id="rightControls">
-  <button id="accelBtn">엑셀</button>
-  <button id="brakeBtn">브레이크</button>
-</div>
-<div id="gearBox">기어: P</div>
 <div id="speedBox">속도: 0 km/h</div>
+<div id="gearBox">
+  <button class="gearButton active" data-gear="P">P</button>
+  <button class="gearButton" data-gear="R">R</button>
+  <button class="gearButton" data-gear="N">N</button>
+  <button class="gearButton" data-gear="D">D</button>
+</div>
+
+<div id="buttonsLeft">
+  <button id="leftBtn" class="controlBtn">◀ 좌</button>
+  <button id="rightBtn" class="controlBtn">우 ▶</button>
+</div>
+<div id="buttonsRight">
+  <button id="accelBtn" class="controlBtn">엑셀</button>
+  <button id="brakeBtn" class="controlBtn">브레이크</button>
+</div>
 
 <script type="module">
-// Three.js, Cannon-es 모듈 불러오기
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
 import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
-/* ====== 기본 세팅 ====== */
+const speedBox = document.getElementById('speedBox');
+const gearButtons = document.querySelectorAll('.gearButton');
+
+let currentGear = 'P';
+gearButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentGear = btn.dataset.gear;
+    updateGearButtons();
+  });
+});
+function updateGearButtons(){
+  gearButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.gear === currentGear);
+  });
+}
+
+/* THREE.js 세팅 */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222222);
+scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, -15);
+camera.position.set(0, 5, -10);
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
-window.addEventListener('resize', ()=>{
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-/* ====== 조명 ====== */
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
-scene.add(hemiLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.6));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
 dirLight.position.set(5, 10, -5);
 scene.add(dirLight);
 
-/* ====== 물리 세계 세팅 (Cannon-es) ====== */
+/* CANNON 물리엔진 세팅 */
 const world = new CANNON.World({
-  gravity: new CANNON.Vec3(0, -9.82, 0),
+  gravity: new CANNON.Vec3(0, -9.82, 0)
 });
 world.broadphase = new CANNON.SAPBroadphase(world);
 world.defaultContactMaterial.friction = 0.6;
 
-/* ====== 지면 만들기 ====== */
-const groundMaterial = new CANNON.Material('groundMaterial');
-const groundShape = new CANNON.Plane();
-const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
-groundBody.addShape(groundShape);
+/* 바닥 */
+const groundBody = new CANNON.Body({
+  mass: 0,
+  shape: new CANNON.Plane()
+});
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 world.addBody(groundBody);
 
 const groundMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(200, 200),
-  new THREE.MeshStandardMaterial({ color: 0x333333 })
+  new THREE.PlaneGeometry(500, 500),
+  new THREE.MeshStandardMaterial({color: 0x333333})
 );
 groundMesh.rotation.x = -Math.PI/2;
 scene.add(groundMesh);
 
-/* ====== 트랙 벽 만들기 ====== */
-const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
-const wallBodies = [];
-
-const wallsData = [
-  {pos: [0, 2, -100], size: [200, 4, 4]}, // 앞벽
-  {pos: [0, 2, 100], size: [200, 4, 4]},  // 뒷벽
-  {pos: [-100, 2, 0], size: [4, 4, 200]}, // 왼쪽벽
-  {pos: [100, 2, 0], size: [4, 4, 200]}   // 오른쪽벽
-];
-
-wallsData.forEach(({pos, size}) => {
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(...size),
-    wallMaterial
-  );
-  mesh.position.set(...pos);
-  scene.add(mesh);
-
-  const shape = new CANNON.Box(new CANNON.Vec3(size[0]/2, size[1]/2, size[2]/2));
-  const body = new CANNON.Body({ mass: 0 });
-  body.addShape(shape);
-  body.position.set(...pos);
-  world.addBody(body);
-  wallBodies.push(body);
-});
-
-/* ====== 자동차 3D 모델 만들기 함수 ====== */
-function createCarMesh() {
-  const car = new THREE.Group();
-
-  // 바디
-  const bodyGeo = new THREE.BoxGeometry(3, 1, 6);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff2222, metalness: 0.6, roughness: 0.4 });
-  const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-  bodyMesh.position.y = 0.75;
-  car.add(bodyMesh);
-
-  // 루프
-  const roofGeo = new THREE.BoxGeometry(2.5, 0.5, 3);
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0xaa2222, metalness: 0.5, roughness: 0.5 });
-  const roofMesh = new THREE.Mesh(roofGeo, roofMat);
-  roofMesh.position.set(0, 1.3, 0);
-  car.add(roofMesh);
-
-  // 창문
-  const windowMat = new THREE.MeshStandardMaterial({ color: 0x5555aa, opacity: 0.5, transparent: true, roughness: 0.1 });
-  const fwGeo = new THREE.BoxGeometry(2.3, 0.5, 0.05);
-  const frontWindow = new THREE.Mesh(fwGeo, windowMat);
-  frontWindow.position.set(0, 1.2, -1.4);
-  car.add(frontWindow);
-  const rearWindow = frontWindow.clone();
-  rearWindow.position.set(0, 1.2, 1.4);
-  car.add(rearWindow);
-  const leftWindowGeo = new THREE.BoxGeometry(0.05, 0.5, 3);
-  const leftWindow = new THREE.Mesh(leftWindowGeo, windowMat);
-  leftWindow.position.set(-1.25, 1.2, 0);
-  car.add(leftWindow);
-  const rightWindow = leftWindow.clone();
-  rightWindow.position.set(1.25, 1.2, 0);
-  car.add(rightWindow);
-
-  // 바퀴 4개
-  const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.4, 24);
-  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.6 });
-  for (let i=0; i<4; i++) {
-    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-    wheel.rotation.z = Math.PI/2;
-    const xPos = (i < 2) ? -1.1 : 1.1;
-    const zPos = (i % 2 === 0) ? -2.3 : 2.3;
-    wheel.position.set(xPos, 0.3, zPos);
-    car.add(wheel);
-  }
-
-  return car;
-}
-
-/* ====== 차량 물리 및 시각화 세팅 ====== */
-const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.4, 3));
-const chassisBody = new CANNON.Body({ mass: 150 });
+/* 자동차 차체 생성 */
+const chassisShape = new CANNON.Box(new CANNON.Vec3(1.6, 0.5, 3));
+const chassisBody = new CANNON.Body({mass: 150});
 chassisBody.addShape(chassisShape);
 chassisBody.position.set(0, 1, 0);
 world.addBody(chassisBody);
 
-const chassisMesh = createCarMesh();
+/* 자동차 시각화 - 차체 */
+const chassisMesh = new THREE.Group();
+
+// 실제 자동차처럼 생긴 차체 디자인 (본체 + 지붕 + 창문 + 디테일)
+const bodyMaterial = new THREE.MeshStandardMaterial({color: 0xff0000, metalness: 0.7, roughness: 0.3});
+const bodyGeometry = new THREE.BoxGeometry(3.2, 1, 6);
+const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+bodyMesh.position.y = 0.5;
+chassisMesh.add(bodyMesh);
+
+// 지붕
+const roofGeometry = new THREE.BoxGeometry(2.8, 0.6, 3);
+const roofMaterial = new THREE.MeshStandardMaterial({color: 0xaa2222, metalness: 0.5, roughness: 0.4});
+const roofMesh = new THREE.Mesh(roofGeometry, roofMaterial);
+roofMesh.position.set(0, 1.0, -0.5);
+chassisMesh.add(roofMesh);
+
+// 창문
+const windowMaterial = new THREE.MeshStandardMaterial({color: 0x5555aa, opacity: 0.5, transparent: true, roughness: 0.1});
+const frontWindowGeometry = new THREE.BoxGeometry(2.6, 0.5, 0.05);
+const frontWindowMesh = new THREE.Mesh(frontWindowGeometry, windowMaterial);
+frontWindowMesh.position.set(0, 1.0, -2.0);
+chassisMesh.add(frontWindowMesh);
+
+const rearWindowMesh = frontWindowMesh.clone();
+rearWindowMesh.position.set(0, 1.0, 2.0);
+chassisMesh.add(rearWindowMesh);
+
+const leftWindowGeometry = new THREE.BoxGeometry(0.05, 0.5, 4);
+const leftWindowMesh = new THREE.Mesh(leftWindowGeometry, windowMaterial);
+leftWindowMesh.position.set(-1.6, 1.0, 0);
+chassisMesh.add(leftWindowMesh);
+
+const rightWindowMesh = leftWindowMesh.clone();
+rightWindowMesh.position.set(1.6, 1.0, 0);
+chassisMesh.add(rightWindowMesh);
+
+// 바퀴 메시 - 실제 타이어 모양으로 원통형
+const wheelMaterial = new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.8, roughness: 0.7});
+const wheelGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.5, 32, 1, true);
+
+const wheelMeshes = [];
+function createWheelMesh() {
+  const mesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+  mesh.rotation.z = Math.PI / 2;
+  return mesh;
+}
+
+// 앞 왼쪽 바퀴
+const frontLeftWheelMesh = createWheelMesh();
+chassisMesh.add(frontLeftWheelMesh);
+// 앞 오른쪽 바퀴
+const frontRightWheelMesh = createWheelMesh();
+chassisMesh.add(frontRightWheelMesh);
+// 뒤 왼쪽 바퀴
+const rearLeftWheelMesh = createWheelMesh();
+chassisMesh.add(rearLeftWheelMesh);
+// 뒤 오른쪽 바퀴
+const rearRightWheelMesh = createWheelMesh();
+chassisMesh.add(rearRightWheelMesh);
+
 scene.add(chassisMesh);
 
+/* RaycastVehicle 세팅 */
 const vehicle = new CANNON.RaycastVehicle({
   chassisBody: chassisBody,
-  indexUpAxis: 1,
-  indexRightAxis: 0,
-  indexForwardAxis: 2,
+  indexRightAxis: 0,   // x
+  indexUpAxis: 1,      // y
+  indexForwardAxis: 2  // z
 });
 
 const wheelOptions = {
@@ -239,202 +204,127 @@ const wheelOptions = {
   frictionSlip: 4,
   dampingRelaxation: 2.3,
   dampingCompression: 4.4,
-  maxSuspensionForce: 10000,
+  maxSuspensionForce: 1e4,
   rollInfluence: 0.01,
   maxSuspensionTravel: 0.3,
   customSlidingRotationalSpeed: -30,
-  useCustomSlidingRotationalSpeed: true,
+  useCustomSlidingRotationalSpeed: true
 };
 
-// 앞바퀴(조향 가능)
-vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, 2.4), isFrontWheel: true});
-vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, 2.4), isFrontWheel: true});
-// 뒷바퀴
-vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, -2.4), isFrontWheel: false});
-vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, -2.4), isFrontWheel: false});
+vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, 2.3), isFrontWheel: true});
+vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, 2.3), isFrontWheel: true});
+vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, -2.3), isFrontWheel: false});
+vehicle.addWheel({...wheelOptions, chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, -2.3), isFrontWheel: false});
 
 vehicle.addToWorld(world);
 
-const wheelMeshes = [];
-vehicle.wheelInfos.forEach(wheel => {
-  const mesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.4, 24),
-    new THREE.MeshStandardMaterial({ color: 0x222222 })
-  );
-  mesh.rotation.z = Math.PI/2;
-  scene.add(mesh);
-  wheelMeshes.push(mesh);
-});
+/* 바퀴 메시 배열 */
+const wheelMeshesArray = [frontLeftWheelMesh, frontRightWheelMesh, rearLeftWheelMesh, rearRightWheelMesh];
 
-/* ====== 주변 자동차 2대 (자동 주행) ====== */
-const enemyCars = [];
+/* 입력 상태 */
+const inputState = {
+  left: false,
+  right: false,
+  accel: false,
+  brake: false
+};
 
-function createEnemyCar(x, z, speed) {
-  const body = new CANNON.Body({ mass: 150 });
-  body.addShape(chassisShape);
-  body.position.set(x, 1, z);
-  body.quaternion.setFromEuler(0, Math.PI, 0);
-  world.addBody(body);
+const maxSteerVal = Math.PI / 6; // ±30도
+const maxForceForward = 3500;
+const maxForceReverse = 1200;
 
-  const mesh = createCarMesh();
-  scene.add(mesh);
+let steeringValue = 0;
+let engineForce = 0;
+let brakeForce = 0;
 
-  return {body, mesh, speed};
+/* 버튼 바인딩 */
+function bindButton(id, key) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('pointerdown', () => { inputState[key] = true; });
+  btn.addEventListener('pointerup', () => { inputState[key] = false; });
+  btn.addEventListener('pointerleave', () => { inputState[key] = false; });
+  btn.addEventListener('touchstart', e => { e.preventDefault(); inputState[key] = true; }, {passive:false});
+  btn.addEventListener('touchend', e => { e.preventDefault(); inputState[key] = false; }, {passive:false});
 }
 
-enemyCars.push(createEnemyCar(10, -40, 4));
-enemyCars.push(createEnemyCar(-10, -70, 3));
+bindButton('leftBtn', 'left');
+bindButton('rightBtn', 'right');
+bindButton('accelBtn', 'accel');
+bindButton('brakeBtn', 'brake');
 
-/* ====== 입력 상태 ====== */
-const keyState = { left:false, right:false, accel:false, brake:false };
-
-const leftBtn = document.getElementById('leftBtn');
-const rightBtn = document.getElementById('rightBtn');
-const accelBtn = document.getElementById('accelBtn');
-const brakeBtn = document.getElementById('brakeBtn');
-
-[leftBtn, rightBtn, accelBtn, brakeBtn].forEach((btn, i) => {
-  const keyMap = ['left', 'right', 'accel', 'brake'][i];
-  btn.addEventListener('pointerdown', () => keyState[keyMap] = true);
-  btn.addEventListener('pointerup', () => keyState[keyMap] = false);
-  btn.addEventListener('pointerleave', () => keyState[keyMap] = false);
-  btn.addEventListener('touchstart', e => { e.preventDefault(); keyState[keyMap] = true; });
-  btn.addEventListener('touchend', () => keyState[keyMap] = false);
-});
-
-/* ====== 기어 및 속도 UI ====== */
-const gearBox = document.getElementById('gearBox');
-const speedBox = document.getElementById('speedBox');
-
-let currentGear = 'P'; // P, R, N, D
-
-function setGear(gear) {
-  // 안전 변속 제한
-  const speed = chassisBody.velocity.length();
-  if((gear === 'R' && speed > 1) || (gear === 'P' && speed > 0.1 && currentGear !== 'P')) return;
-  if((gear === 'D' && currentGear === 'R' && speed > 1) || (gear === 'R' && currentGear === 'D' && speed > 1)) return;
-
-  currentGear = gear;
-  gearBox.textContent = `기어: ${gear}`;
-
-  // P 기어 시 완전 브레이크
-  if(gear === 'P') {
-    for(let i=0; i<4; i++) vehicle.setBrake(1e5, i);
-  } else {
-    for(let i=0; i<4; i++) vehicle.setBrake(0, i);
-  }
-}
-
-window.addEventListener('keydown', e => {
-  if(e.key === '1') setGear('P');
-  else if(e.key === '2') setGear('R');
-  else if(e.key === '3') setGear('N');
-  else if(e.key === '4') setGear('D');
-});
-
-setGear('P'); // 초기 기어
-
-/* ====== 게임 루프 ====== */
-const maxSteerVal = Math.PI / 6;
-const maxForce = 4000;
-const maxBrakeForce = 5000;
-let steerValue = 0;
-
+/* 애니메이션 루프 */
 let lastTime = performance.now();
 
 function animate() {
   requestAnimationFrame(animate);
+  const time = performance.now();
+  const delta = (time - lastTime) / 1000;
+  lastTime = time;
 
-  const now = performance.now();
-  const dt = (now - lastTime) / 1000;
-  lastTime = now;
+  // 조향값 업데이트
+  if(inputState.left) steeringValue = Math.min(steeringValue + 0.03, maxSteerVal);
+  else if(inputState.right) steeringValue = Math.max(steeringValue - 0.03, -maxSteerVal);
+  else steeringValue *= 0.9;
 
-  // 조향
-  if(keyState.left) steerValue = Math.min(steerValue + 0.04, maxSteerVal);
-  else if(keyState.right) steerValue = Math.max(steerValue - 0.04, -maxSteerVal);
-  else steerValue *= 0.8;
+  vehicle.setSteeringValue(steeringValue, 0);
+  vehicle.setSteeringValue(steeringValue, 1);
 
-  vehicle.setSteeringValue(steerValue, 0);
-  vehicle.setSteeringValue(steerValue, 1);
-
-  // 가속/브레이크
-  let engineForce = 0;
-  let brakeForce = 0;
+  // 엔진 힘과 브레이크
+  engineForce = 0;
+  brakeForce = 0;
 
   if(currentGear === 'D'){
-    if(keyState.accel) engineForce = maxForce;
-    if(keyState.brake) brakeForce = maxBrakeForce;
-  }
-  else if(currentGear === 'R'){
-    if(keyState.accel) engineForce = -maxForce/2;
-    if(keyState.brake) brakeForce = maxBrakeForce;
-  }
-  else {
-    // N 또는 P 기어
-    if(currentGear === 'P') brakeForce = maxBrakeForce;
-    else if(keyState.brake) brakeForce = maxBrakeForce/2;
+    if(inputState.accel) engineForce = maxForceForward;
+    if(inputState.brake) brakeForce = 2000;
+  } else if(currentGear === 'R'){
+    if(inputState.accel) engineForce = -maxForceReverse;
+    if(inputState.brake) brakeForce = 2000;
+  } else if(currentGear === 'P'){
+    brakeForce = 1e5; // 완전 고정
+  } else if(currentGear === 'N'){
+    if(inputState.brake) brakeForce = 2000;
   }
 
   vehicle.applyEngineForce(engineForce, 2);
   vehicle.applyEngineForce(engineForce, 3);
 
-  for(let i=0; i<4; i++) vehicle.setBrake(brakeForce, i);
+  for(let i=0; i<4; i++){
+    vehicle.setBrake(brakeForce, i);
+  }
 
-  // 차량 물리 업데이트
-  world.step(1/60, dt, 3);
+  // 물리 세계 업데이트
+  world.step(1/60, delta, 3);
 
-  // 차량 위치/회전 동기화
+  // 차체 메시 위치/회전 동기화
   chassisMesh.position.copy(chassisBody.position);
   chassisMesh.quaternion.copy(chassisBody.quaternion);
 
-  // 바퀴 위치/회전 동기화
-  for(let i=0; i<vehicle.wheelInfos.length; i++) {
+  // 바퀴 메시 위치/회전 동기화
+  for(let i=0; i<vehicle.wheelInfos.length; i++){
     vehicle.updateWheelTransform(i);
     const t = vehicle.wheelInfos[i].worldTransform;
-    wheelMeshes[i].position.copy(t.position);
-    wheelMeshes[i].quaternion.copy(t.quaternion);
+    wheelMeshesArray[i].position.copy(t.position);
+    wheelMeshesArray[i].quaternion.copy(t.quaternion);
   }
 
-  // 주변 차량 간단 AI: 앞으로 계속 이동, 벽 닿으면 방향 반전
-  enemyCars.forEach(car => {
-    const forward = new CANNON.Vec3(0, 0, -1);
-    const quat = car.body.quaternion;
-    const direction = quat.vmult(forward);
+  // 카메라: 자동차 뒤쪽에서 따라오기
+  const carPos = chassisMesh.position.clone();
+  const carQuat = chassisMesh.quaternion.clone();
+  const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(carQuat);
+  const camPos = carPos.clone().add(forward.multiplyScalar(-10));
+  camPos.y += 5;
+  camera.position.lerp(camPos, 0.1);
+  camera.lookAt(carPos);
 
-    car.body.velocity.set(direction.x * car.speed, car.body.velocity.y, direction.z * car.speed);
-
-    // 벽에 가까우면 회전
-    if(car.body.position.x > 95) car.body.quaternion.setFromEuler(0, Math.PI, 0);
-    else if(car.body.position.x < -95) car.body.quaternion.setFromEuler(0, 0, 0);
-
-    car.mesh.position.copy(car.body.position);
-    car.mesh.quaternion.copy(car.body.quaternion);
-  });
-
-  // 카메라 뒤따라오기 (자동차 뒤쪽 약간 위에서)
-  const carPosition = chassisMesh.position.clone();
-  const carQuaternion = chassisMesh.quaternion.clone();
-
-  // 자동차 앞 방향 벡터 구하기
-  const forwardVector = new THREE.Vector3(0, 0, 1);
-  forwardVector.applyQuaternion(carQuaternion);
-
-  // 카메라 위치 = 자동차 위치 - (앞 방향 벡터) * 거리 + 위쪽 약간 올리기
-  const cameraOffset = forwardVector.multiplyScalar(-10);
-  camera.position.copy(carPosition).add(cameraOffset);
-  camera.position.y += 5;
-
-  // 카메라가 자동차 바라보도록
-  camera.lookAt(carPosition);
-
-  // 속도계 업데이트 (km/h)
-  const speed = chassisBody.velocity.length() * 3.6;
-  speedBox.textContent = '속도: ' + speed.toFixed(0) + ' km/h';
+  // 속도 표시 (km/h)
+  const speedKmh = chassisBody.velocity.length() * 3.6;
+  speedBox.textContent = `속도: ${speedKmh.toFixed(0)} km/h`;
 
   renderer.render(scene, camera);
 }
 
 animate();
+
 </script>
 </body>
 </html>
