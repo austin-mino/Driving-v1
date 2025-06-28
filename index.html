@@ -311,11 +311,19 @@ function animate() {
   updateWheelVisuals();
   updateSteeringVisuals();
 
-  // 카메라 부드럽게 추적
-  const targetPos = new THREE.Vector3().copy(chassisMesh.position);
-  const camPos = new THREE.Vector3(0,4,-12).applyQuaternion(chassisMesh.quaternion).add(chassisMesh.position);
-  camera.position.lerp(camPos, 0.1);
-  camera.lookAt(targetPos);
+// 카메라 부드럽게 자동차 뒤쪽에서 따라감
+const behindDistance = 6;
+const height = 2;
+
+const carDirection = new THREE.Vector3(0, 0, 1);
+carDirection.applyQuaternion(chassisMesh.quaternion);
+
+const camPos = new THREE.Vector3().copy(chassisMesh.position)
+  .addScaledVector(carDirection, -behindDistance);
+camPos.y += height;
+
+camera.position.lerp(camPos, 0.1);
+camera.lookAt(chassisMesh.position);
 
   // 속도 표시 (m/s -> km/h)
   const speedKmh = chassisBody.velocity.length() * 3.6;
