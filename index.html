@@ -80,6 +80,37 @@
       font-size: 20px;
     }
   }
+  // 조명 추가 (기본적인 앰비언트 + 방향광)
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(10, 20, 10);
+scene.add(directionalLight);
+
+// 렌더링 애니메이션 루프 (빈 씬 렌더링만 해도 검은 화면에서 씬이 보임)
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+  camera.position.set(0, 5, -15);
+camera.lookAt(0, 0, 0); // 씬 중앙을 바라보게
+
+// 조명 추가
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(10, 20, 10);
+scene.add(directionalLight);
+
+// 렌더링 루프
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
 </style>
 </head>
 <body>
