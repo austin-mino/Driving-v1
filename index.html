@@ -1,16 +1,155 @@
-완벽한 3D 자동차 게임 body { margin: 0; overflow: hidden; background: #121212; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; } #rotateWarning { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 15px; font-size: 1.3rem; font-weight: bold; z-index: 1000; display: none; } #hud { position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 12px 18px; border-radius: 10px; font-weight: 700; font-size: 18px; user-select: none; z-index: 100; } #gearDisplay { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 12px 18px; border-radius: 10px; font-weight: 700; font-size: 18px; user-select: none; z-index: 100; } #controlsLeft, #controlsRight { position: fixed; bottom: 20px; display: flex; gap: 15px; z-index: 100; user-select: none; } #controlsLeft { left: 20px; } #controlsRight { right: 20px; } button.controlBtn { padding: 14px 20px; border-radius: 12px; border: none; background: #0078d7; color: white; font-weight: 700; font-size: 16px; cursor: pointer; touch-action: manipulation; user-select: none; } button.controlBtn:active { background: #005a9e; } @media (max-width: 600px) { button.controlBtn { padding: 18px 22px; font-size: 20px; } } 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>완벽한 3D 자동차 게임</title>
+<style>
+  body {
+    margin: 0; 
+    overflow: hidden;
+    background: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+  }
+  #rotateWarning {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    padding: 25px 40px;
+    border-radius: 15px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    z-index: 1000;
+    display: none;
+  }
+  #hud {
+    position: fixed;
+    top: 20px; left: 20px;
+    background: rgba(0,0,0,0.7);
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    user-select: none;
+    z-index: 100;
+  }
+  #gearDisplay {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: rgba(0,0,0,0.7);
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    user-select: none;
+    z-index: 100;
+  }
+  #controlsLeft, #controlsRight {
+    position: fixed;
+    bottom: 20px;
+    display: flex;
+    gap: 15px;
+    z-index: 100;
+    user-select: none;
+  }
+  #controlsLeft {
+    left: 20px;
+  }
+  #controlsRight {
+    right: 20px;
+  }
+  button.controlBtn {
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    background: #0078d7;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  button.controlBtn:active {
+    background: #005a9e;
+  }
+  @media (max-width: 600px) {
+    button.controlBtn {
+      padding: 18px 22px;
+      font-size: 20px;
+    }
+  }
+</style>
+</head>
+<body>
 
-가로 모드로 전환해주세요
+<div id="rotateWarning">가로 모드로 전환해주세요</div>
 
-속도: 0 km/h
+<div id="hud">속도: 0 km/h</div>
+<div id="gearDisplay">기어: P</div>
 
-기어: P
+<div id="controlsLeft">
+  <button id="btnLeft" class="controlBtn">◀ 좌</button>
+  <button id="btnRight" class="controlBtn">우 ▶</button>
+</div>
 
-◀ 좌 우 ▶ 
+<div id="controlsRight">
+  <button id="btnAccel" class="controlBtn">엑셀</button>
+  <button id="btnBrake" class="controlBtn">브레이크</button>
+  <button id="btnGear" class="controlBtn">기어 변경</button>
+</div>
 
-엑셀 브레이크 기어 변경 
+<script type="module">
+// CDN으로 Three.js와 Cannon-es 불러오기
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js'; import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js'; const rotateWarning = document.getElementById('rotateWarning'); const hud = document.getElementById('hud'); const gearDisplay = document.getElementById('gearDisplay'); const btnLeft = document.getElementById('btnLeft'); const btnRight = document.getElementById('btnRight'); const btnAccel = document.getElementById('btnAccel'); const btnBrake = document.getElementById('btnBrake'); const btnGear = document.getElementById('btnGear'); function checkOrientation() { rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? 'block' : 'none'; } window.addEventListener('resize', checkOrientation); window.addEventListener('orientationchange', checkOrientation); checkOrientation(); const scene = new THREE.Scene(); scene.background = new THREE.Color(0x222222); const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000); camera.position.set(0, 5, -15); const renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setClearColor(0x222222); document.body.appendChild(renderer.domElement); window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }); const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0), }); world.broadphase = new CANNON.SAPBroadphase(world); world.solver.iterations = 20; world.defaultContactMaterial.friction = 0.6; const groundShape = new CANNON.Plane(); const groundBody = new CANNON.Body({ mass: 0, shape: groundShape }); groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); world.addBody(groundBody); const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 }); const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), groundMaterial); groundMesh.rotation.x = -Math.PI / 2; scene.add(groundMesh); 
+// 화면 방향 체크
+const rotateWarning = document.getElementById('rotateWarning');
+function checkOrientation() {
+  rotateWarning.style.display = window.innerHeight > window.innerWidth ? 'block' : 'none';
+}
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', checkOrientation);
+checkOrientation();
+
+// 씬, 카메라, 렌더러 기본 세팅
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x222222);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 5000);
+camera.position.set(0, 5, -15);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Cannon-es 물리 월드 초기화
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0),
+});
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.solver.iterations = 20;
+world.defaultContactMaterial.friction = 0.6;
+
+// 바닥 물리 및 시각화
+const groundShape = new CANNON.Plane();
+const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
+groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+world.addBody(groundBody);
+
+const groundMaterial = new THREE.MeshStandardMaterial({color: 0x444444});
+const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000,1000), groundMaterial);
+groundMesh.rotation.x = -Math.PI/2;
+scene.add(groundMesh);
+</script>
 <div id="rotateWarning">가로 모드로 전환해주세요</div>
 
   <div id="hud">속도: 0 km/h</div>
