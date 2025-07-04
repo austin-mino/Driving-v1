@@ -228,8 +228,6 @@ function updateGearDisplay(){
     if(g==='P'){ applyBrake(1e5); engineForce=0; }
   };
 });
-updateGearDisplay();
-
 function applyBrake(f){
   for(let i=0;i<4;i++)vehicle.setBrake(f,i);
 }
