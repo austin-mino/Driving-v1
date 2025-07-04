@@ -1,443 +1,286 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>3D 자동차 게임 – 원형 트랙</title>
-<style>
-  body {
-    margin: 0; overflow: hidden;
-    background: #121212;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-  }
-  #rotateWarning {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.85);
-    padding: 25px 40px;
-    border-radius: 15px;
-    font-size: 1.3rem;
-    font-weight: bold;
-    z-index: 1000;
-    display: none;
-  }
-  #hud, #gearDisplay {
-    position: fixed;
-    background: rgba(0,0,0,0.7);
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 18px;
-    user-select: none;
-    z-index: 100;
-  }
-  #hud {
-    top: 20px; left: 20px;
-  }
-  #gearDisplay {
-    top: 20px; right: 20px;
-  }
-  #controlsLeft, #driveControls {
-    position: fixed;
-    bottom: 20px;
-    display: flex;
-    gap: 15px;
-    z-index: 100;
-    user-select: none;
-  }
-  #controlsLeft {
-    left: 20px;
-  }
-  #driveControls {
-    right: 20px;
-  }
-  button.controlBtn {
-    padding: 14px 22px;
-    border-radius: 12px;
-    border: none;
-    background: #0078d7;
-    color: white;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  button.controlBtn:active {
-    background: #005a9e;
-  }
-  @media (max-width: 600px) {
-    button.controlBtn {
-      padding: 18px 24px;
-      font-size: 20px;
-    }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3D 자동차 게임 – 원형 트랙 버전</title>
+  <style>
+    body{margin:0;overflow:hidden;background:#121212;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;color:#fff}
+    #rotateWarning{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);
+      padding:25px 40px;border-radius:15px;font-size:1.3rem;font-weight:bold;z-index:1000;display:none}
+    #hud,#gearDisplay{position:fixed;background:rgba(0,0,0,.7);padding:12px 18px;border-radius:10px;
+      font-weight:700;font-size:18px;user-select:none;z-index:100}
+    #hud{top:20px;left:20px}
+    #gearDisplay{top:20px;right:20px}
+    #gearControls{position:fixed;top:70px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:100}
+    #controlsLeft,#driveControls{position:fixed;bottom:20px;display:flex;gap:15px;z-index:100;user-select:none}
+    #controlsLeft{left:20px}
+    #driveControls{right:20px}
+    button.controlBtn{padding:14px 20px;border-radius:12px;border:none;background:#0078d7;color:#fff;
+      font-weight:700;font-size:16px;cursor:pointer;touch-action:manipulation}
+    button.controlBtn:active{background:#005a9e}
+    @media(max-width:600px){button.controlBtn{padding:18px 22px;font-size:20px}}
+  </style>
 </head>
 <body>
+  <div id="rotateWarning">가로 모드로 전환해주세요</div>
+  <div id="hud">속도: 0 km/h</div>
+  <div id="gearDisplay">기어: P</div>
 
-<div id="rotateWarning">가로 모드로 전환해주세요</div>
-
-<div id="hud">속도: 0 km/h</div>
-<div id="gearDisplay">기어: P</div>
-
-<div id="controlsLeft">
-  <button id="btnLeft" class="controlBtn">◀ 좌</button>
-  <button id="btnRight" class="controlBtn">우 ▶</button>
-</div>
-
-<div id="driveControls">
-  <button id="btnAccel" class="controlBtn">엑셀</button>
-  <button id="btnBrake" class="controlBtn">브레이크</button>
-  <button id="btnGear" class="controlBtn">기어 변경</button>
-</div>
+  <!-- 좌/우 스티어링 -->
+  <div id="controlsLeft">
+    <button id="btnLeft"  class="controlBtn">◀ 좌</button>
+    <button id="btnRight" class="controlBtn">우 ▶</button>
+  </div>
+  <!-- 엑셀·브레이크 -->
+  <div id="driveControls">
+    <button id="btnAccel" class="controlBtn">엑셀</button>
+    <button id="btnBrake" class="controlBtn">브레이크</button>
+  </div>
+  <!-- 기어 선택 -->
+  <div id="gearControls">
+    <button id="gearP" class="controlBtn">P</button>
+    <button id="gearR" class="controlBtn">R</button>
+    <button id="gearN" class="controlBtn">N</button>
+    <button id="gearD" class="controlBtn">D</button>
+  </div>
 
 <script type="module">
-//--- Import three.js and cannon-es ---
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+import * as THREE  from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
 import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
-// DOM elements
-const rotateWarning = document.getElementById('rotateWarning');
-const hud = document.getElementById('hud');
-const gearDisplay = document.getElementById('gearDisplay');
-const btnLeft = document.getElementById('btnLeft');
-const btnRight = document.getElementById('btnRight');
-const btnAccel = document.getElementById('btnAccel');
-const btnBrake = document.getElementById('btnBrake');
-const btnGear = document.getElementById('btnGear');
-
-// Screen orientation check
-function checkOrientation() {
-  rotateWarning.style.display = (window.innerHeight > window.innerWidth) ? 'block' : 'none';
-}
-window.addEventListener('resize', checkOrientation);
-window.addEventListener('orientationchange', checkOrientation);
+/* ---------- 화면 회전 경고 ---------- */
+const rotateWarning=document.getElementById('rotateWarning');
+function checkOrientation(){rotateWarning.style.display=(innerHeight>innerWidth)?'block':'none'}
+addEventListener('resize',checkOrientation);
+addEventListener('orientationchange',checkOrientation);
 checkOrientation();
 
-// THREE.js scene setup
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222222);
+/* ---------- Three.js 기본 ---------- */
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x222222);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,5000);
+camera.position.set(0,5,10);         // 자동차 앞쪽 시작
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 5000);
-camera.position.set(0, 5, -15);
-
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x222222);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth/window.innerHeight;
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth,innerHeight);
 });
 
-// CANNON physics setup
-const world = new CANNON.World({
-  gravity: new CANNON.Vec3(0, -9.82, 0),
-});
-world.broadphase = new CANNON.SAPBroadphase(world);
-world.solver.iterations = 20;
-world.defaultContactMaterial.friction = 0.6;
+/* ---------- Cannon ES 물리 ---------- */
+const world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
+world.broadphase=new CANNON.SAPBroadphase(world);
+world.defaultContactMaterial.friction=0.6;
 
-// Ground
-const groundShape = new CANNON.Plane();
-const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
-groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+/* ---------- 지면 (평면) ---------- */
+const groundBody=new CANNON.Body({mass:0,shape:new CANNON.Plane()});
+groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
 world.addBody(groundBody);
-
-const groundMaterial = new THREE.MeshStandardMaterial({color: 0x444444});
-const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000,1000), groundMaterial);
-groundMesh.rotation.x = -Math.PI/2;
+const groundMesh=new THREE.Mesh(
+  new THREE.PlaneGeometry(2000,2000),
+  new THREE.MeshStandardMaterial({color:0x444444})
+);
+groundMesh.rotation.x=-Math.PI/2;
 scene.add(groundMesh);
 
-// --- 원형 트랙 생성 ---
-const trackRadius = 80;
-const trackWidth = 8;
-const trackHeight = 2;
-
-// 트랙 바닥 원형 (바닥으로 씀)
-const trackFloorGeom = new THREE.RingGeometry(trackRadius, trackRadius + trackWidth, 128);
-const trackFloorMat = new THREE.MeshStandardMaterial({color: 0x555555, side: THREE.DoubleSide});
-const trackFloor = new THREE.Mesh(trackFloorGeom, trackFloorMat);
-trackFloor.rotation.x = -Math.PI/2;
-scene.add(trackFloor);
-
-// 트랙 울타리(좌우 경계) 박스 충돌체 및 시각화
-const fenceHeight = 2;
-const fenceThickness = 0.3;
-const fenceMaterial = new THREE.MeshStandardMaterial({color: 0x880000});
-
-for(let i=0; i<360; i+=5){
-  const rad = THREE.MathUtils.degToRad(i);
-
-  // 왼쪽 울타리 시각화
-  const fenceGeomL = new THREE.BoxGeometry(fenceThickness, fenceHeight, trackWidth);
-  const fenceL = new THREE.Mesh(fenceGeomL, fenceMaterial);
-  fenceL.position.set(Math.cos(rad)*(trackRadius - fenceThickness/2), fenceHeight/2, Math.sin(rad)*(trackRadius - fenceThickness/2));
-  fenceL.lookAt(0, fenceHeight/2, 0);
-  scene.add(fenceL);
-
-  // 오른쪽 울타리 시각화
-  const fenceGeomR = new THREE.BoxGeometry(fenceThickness, fenceHeight, trackWidth);
-  const fenceR = new THREE.Mesh(fenceGeomR, fenceMaterial);
-  fenceR.position.set(Math.cos(rad)*(trackRadius + trackWidth + fenceThickness/2), fenceHeight/2, Math.sin(rad)*(trackRadius + trackWidth + fenceThickness/2));
-  fenceR.lookAt(0, fenceHeight/2, 0);
-  scene.add(fenceR);
-
-  // 충돌용 장애물 바디 (left)
-  const boxShapeL = new CANNON.Box(new CANNON.Vec3(fenceThickness/2, fenceHeight/2, trackWidth/2));
-  const boxBodyL = new CANNON.Body({mass: 0, shape: boxShapeL});
-  boxBodyL.position.set(Math.cos(rad)*(trackRadius - fenceThickness/2), fenceHeight/2, Math.sin(rad)*(trackRadius - fenceThickness/2));
-  boxBodyL.quaternion.copy(new CANNON.Quaternion().setFromEuler(0, -rad, 0));
-  world.addBody(boxBodyL);
-
-  // 충돌용 장애물 바디 (right)
-  const boxShapeR = new CANNON.Box(new CANNON.Vec3(fenceThickness/2, fenceHeight/2, trackWidth/2));
-  const boxBodyR = new CANNON.Body({mass: 0, shape: boxShapeR});
-  boxBodyR.position.set(Math.cos(rad)*(trackRadius + trackWidth + fenceThickness/2), fenceHeight/2, Math.sin(rad)*(trackRadius + trackWidth + fenceThickness/2));
-  boxBodyR.quaternion.copy(new CANNON.Quaternion().setFromEuler(0, -rad, 0));
-  world.addBody(boxBodyR);
+/* ---------- 원형 트랙 울타리 ---------- */
+function createBarrier(x,y,z,rot){
+  const sx=2,sy=2,sz=1;
+  const shape=new CANNON.Box(new CANNON.Vec3(sx/2,sy/2,sz/2));
+  const body=new CANNON.Body({mass:0,shape,position:new CANNON.Vec3(x,y+sy/2,z)});
+  body.quaternion.setFromEuler(0,rot,0);
+  world.addBody(body);
+  const mesh=new THREE.Mesh(
+    new THREE.BoxGeometry(sx,sy,sz),
+    new THREE.MeshStandardMaterial({color:0x884400})
+  );
+  mesh.position.copy(body.position);
+  mesh.quaternion.copy(body.quaternion);
+  scene.add(mesh);
 }
 
-// --- Car physics & visuals ---
-// Rounded box geometry helper
-function createRoundedBoxGeometry(width, height, depth, radius, segments=3){
-  const shape = new THREE.Shape();
-  const eps = 0.00001;
-  const radius0 = radius - eps;
-  shape.absarc( eps, eps, eps, -Math.PI/2, -Math.PI, true );
-  shape.absarc( eps, height -  radius * 2, eps, Math.PI, Math.PI/2, true );
-  shape.absarc( width -  radius * 2, height -  radius * 2, eps, Math.PI/2, 0, true );
-  shape.absarc( width -  radius * 2, eps, eps, 0, -Math.PI/2, true );
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: depth - radius * 2,
-    bevelEnabled: true,
-    bevelSegments: segments,
-    steps: 1,
-    bevelSize: radius0,
-    bevelThickness: radius,
-    curveSegments: segments
-  });
-  geometry.center();
-  return geometry;
+const trackRadius=80,segments=72;
+for(let i=0;i<segments;i++){
+  const angle=i*(2*Math.PI/segments);
+  createBarrier(Math.cos(angle)*(trackRadius-1),0,Math.sin(angle)*(trackRadius-1),angle);
+  createBarrier(Math.cos(angle)*(trackRadius+1),0,Math.sin(angle)*(trackRadius+1),angle);
 }
 
-const chassisWidth = 3;
-const chassisHeight = 1;
-const chassisDepth = 6;
-const chassisRadius = 0.3;
-
-const chassisShape = new CANNON.Box(new CANNON.Vec3(chassisWidth/2, chassisHeight/2, chassisDepth/2));
-const chassisBody = new CANNON.Body({mass: 200});
+/* ---------- 자동차(물리) ---------- */
+const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
+const chassisBody=new CANNON.Body({mass:150});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(trackRadius + 5, 2, 0);
-chassisBody.angularDamping = 0.5;
+chassisBody.position.set(0,2,0);
+chassisBody.angularDamping=0.5;
 world.addBody(chassisBody);
 
-const chassisMaterial = new THREE.MeshStandardMaterial({color: 0xff0000, metalness: 0.7, roughness: 0.4});
-const chassisGeometry = createRoundedBoxGeometry(chassisWidth, chassisHeight, chassisDepth, chassisRadius, 5);
-const chassisMesh = new THREE.Mesh(chassisGeometry, chassisMaterial);
-scene.add(chassisMesh);
+/* ---------- 자동차(시각) – 처음 버전과 동일 ---------- */
+function createRoundedCarBody(){
+  const g=new THREE.Group();
 
-// Vehicle setup
-const vehicle = new CANNON.RaycastVehicle({
-  chassisBody: chassisBody,
-  indexRightAxis: 0,
-  indexUpAxis: 1,
-  indexForwardAxis: 2,
+  const bodyMat=new THREE.MeshStandardMaterial({color:0xff4444,metalness:0.6,roughness:0.4});
+  const mainBody=new THREE.Mesh(new THREE.BoxGeometry(3,1.2,6),bodyMat);
+  mainBody.position.y=0.6;mainBody.castShadow=mainBody.receiveShadow=true;g.add(mainBody);
+
+  const sphereGeom=new THREE.SphereGeometry(0.6,16,16);
+  const spheres=[[-1.4,0.6,-2.7],[1.4,0.6,-2.7],[-1.4,0.6,2.7],[1.4,0.6,2.7]];
+  spheres.forEach(([x,y,z])=>{
+    const m=new THREE.Mesh(sphereGeom,bodyMat);
+    m.position.set(x,y,z);
+    g.add(m);
+  });
+
+  const roof=new THREE.Mesh(
+    new THREE.BoxGeometry(2.5,0.4,3),
+    new THREE.MeshStandardMaterial({color:0xaa2222,metalness:0.5,roughness:0.5})
+  );
+  roof.position.set(0,1.3,0);roof.castShadow=roof.receiveShadow=true;g.add(roof);
+
+  const windowMat=new THREE.MeshStandardMaterial({color:0x446688,transparent:true,opacity:0.5,roughness:0.1});
+  const frontWin=new THREE.Mesh(new THREE.BoxGeometry(2.3,0.5,0.05),windowMat);
+  frontWin.position.set(0,1.25,-1.5);g.add(frontWin);
+  const rearWin=frontWin.clone();rearWin.position.z=1.5;g.add(rearWin);
+  const leftWin=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.5,3),windowMat);
+  leftWin.position.set(-1.25,1.25,0);g.add(leftWin);
+  const rightWin=leftWin.clone();rightWin.position.x=1.25;g.add(rightWin);
+
+  const bumperMat=new THREE.MeshStandardMaterial({color:0x990000,metalness:0.7,roughness:0.3});
+  const fBump=new THREE.Mesh(new THREE.BoxGeometry(3,0.6,0.5),bumperMat);
+  fBump.position.set(0,0.5,-3.1);g.add(fBump);
+  const rBump=fBump.clone();rBump.position.z=3.1;g.add(rBump);
+
+  const headMat=new THREE.MeshStandardMaterial({color:0xffffee,emissive:0xffffee,emissiveIntensity:0.7});
+  const headLamp=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.3,32),headMat);
+  headLamp.rotation.x=Math.PI/2;headLamp.position.set(-1.1,0.8,-3.3);g.add(headLamp);
+  const headLampR=headLamp.clone();headLampR.position.x=1.1;g.add(headLampR);
+
+  return g;
+}
+const carMesh=createRoundedCarBody();
+scene.add(carMesh);
+
+/* ---------- RaycastVehicle ---------- */
+const vehicle=new CANNON.RaycastVehicle({
+  chassisBody, indexRightAxis:0, indexUpAxis:1, indexForwardAxis:2
 });
-
-const wheelOptions = {
-  radius: 0.5,
-  directionLocal: new CANNON.Vec3(0, -1, 0),
-  suspensionStiffness: 30,
-  suspensionRestLength: 0.3,
-  frictionSlip: 5,
-  dampingRelaxation: 2.3,
-  dampingCompression: 4.4,
-  maxSuspensionForce: 100000,
-  rollInfluence: 0.01,
-  axleLocal: new CANNON.Vec3(-1, 0, 0),
-  maxSuspensionTravel: 0.3,
-  useCustomSlidingRotationalSpeed: true,
-  customSlidingRotationalSpeed: -30,
+const wheelOpts={
+  radius:0.5,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:30,
+  suspensionRestLength:0.3,frictionSlip:5,dampingRelaxation:2.3,dampingCompression:4.4,
+  maxSuspensionForce:100000,rollInfluence:0.01,axleLocal:new CANNON.Vec3(-1,0,0),
+  maxSuspensionTravel:0.3,useCustomSlidingRotationalSpeed:true,customSlidingRotationalSpeed:-30
 };
-
-vehicle.addWheel({
-  ...wheelOptions,
-  chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, 2.4),
-  isFrontWheel: true,
+[[-1.2,0,2.4,true],[1.2,0,2.4,true],[-1.2,0,-2.4,false],[1.2,0,-2.4,false]].forEach(([x,y,z,front])=>{
+  vehicle.addWheel({...wheelOpts,chassisConnectionPointLocal:new CANNON.Vec3(x,y,z),isFrontWheel:front});
 });
-vehicle.addWheel({
-  ...wheelOptions,
-  chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, 2.4),
-  isFrontWheel: true,
-});
-vehicle.addWheel({
-  ...wheelOptions,
-  chassisConnectionPointLocal: new CANNON.Vec3(-1.2, 0, -2.4),
-  isFrontWheel: false,
-});
-vehicle.addWheel({
-  ...wheelOptions,
-  chassisConnectionPointLocal: new CANNON.Vec3(1.2, 0, -2.4),
-  isFrontWheel: false,
-});
-
 vehicle.addToWorld(world);
 
-const wheelMeshes = [];
-vehicle.wheelInfos.forEach(() => {
-  const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 32);
-  const wheelMat = new THREE.MeshStandardMaterial({color: 0x111111, metalness: 0.7, roughness: 0.5});
-  const wheelMesh = new THREE.Mesh(wheelGeo, wheelMat);
-  wheelMesh.rotation.z = Math.PI / 2; // 바퀴가 옆으로 누워있도록
-  scene.add(wheelMesh);
-  wheelMeshes.push(wheelMesh);
+/* ---------- 휠 시각 ---------- */
+const wheelMeshes=[];
+vehicle.wheelInfos.forEach(w=>{
+  const m=new THREE.Mesh(
+    new THREE.CylinderGeometry(w.radius,w.radius,0.4,32),
+    new THREE.MeshStandardMaterial({color:0x111111,metalness:0.7,roughness:0.5})
+  );
+  m.rotation.z=Math.PI/2;
+  scene.add(m);
+  wheelMeshes.push(m);
 });
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-directionalLight.position.set(10, 30, 20);
-directionalLight.castShadow = true;
-scene.add(directionalLight);
+/* ---------- 조명 ---------- */
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
+const dirLight=new THREE.DirectionalLight(0xffffff,0.9);
+dirLight.position.set(10,30,20);
+scene.add(dirLight);
 
-// Driving variables
-let engineForce = 0;
-const maxEngineForce = 2500; // 속도 느리게 조정
-const maxBrakeForce = 400;
-let brakeForce = 0;
+/* ---------- 입력 & 주행 변수 ---------- */
+const input={left:false,right:false,accel:false,brake:false};
+const btnLeft=document.getElementById('btnLeft'),
+      btnRight=document.getElementById('btnRight'),
+      btnAccel=document.getElementById('btnAccel'),
+      btnBrake=document.getElementById('btnBrake');
 
-let steeringValue = 0;
-const maxSteerVal = Math.PI / 8; // 약 22.5도
-
-// Gear states
-let gearState = 'P'; // P, R, N, D
-const gears = ['P', 'R', 'N', 'D'];
-let gearIndex = 0;
-
-function updateGearDisplay() {
-  gearDisplay.textContent = `기어: ${gearState}`;
+function bind(b,prop){
+  b.addEventListener('mousedown',()=>input[prop]=true);
+  b.addEventListener('mouseup',()=>input[prop]=false);
+  b.addEventListener('touchstart',e=>{e.preventDefault();input[prop]=true});
+  b.addEventListener('touchend',e=>{e.preventDefault();input[prop]=false});
 }
+// 좌우 조작 버튼 반전: 왼쪽 버튼 누르면 right=true, 오른쪽 버튼 누르면 left=true
+[['left',btnRight],['right',btnLeft],['accel',btnAccel],['brake',btnBrake]].forEach(([p,b])=>bind(b,p));
 
-// Input state
-const input = {
-  left: false,
-  right: false,
-  accel: false,
-  brake: false,
-};
+let engineForce=0,brakeForce=0;
+const maxEngineForce=2500,maxBrakeForce=400,maxSteerVal=Math.PI/8;
+let steeringValue=0,gearState='P';
+const gearDisplay=document.getElementById('gearDisplay');
 
-// Input bindings
-function bindBtnEvents(button, prop) {
-  button.addEventListener('mousedown', () => { input[prop] = true; });
-  button.addEventListener('mouseup', () => { input[prop] = false; });
-  button.addEventListener('touchstart', e => { e.preventDefault(); input[prop] = true; });
-  button.addEventListener('touchend', e => { e.preventDefault(); input[prop] = false; });
+function updateGearDisplay(){
+  gearDisplay.textContent=`기어: ${gearState}`;
 }
-bindBtnEvents(btnLeft, 'left');
-bindBtnEvents(btnRight, 'right');
-bindBtnEvents(btnAccel, 'accel');
-bindBtnEvents(btnBrake, 'brake');
-
-btnGear.addEventListener('click', () => {
-  gearIndex = (gearIndex + 1) % gears.length;
-  gearState = gears[gearIndex];
-  updateGearDisplay();
-
-  if (gearState === 'P') {
-    applyBrake(1e5);
-    engineForce = 0;
-  } else if (gearState === 'N') {
-    engineForce = 0;
-    brakeForce = 0;
-  }
+['P','R','N','D'].forEach(g=>{
+  document.getElementById('gear'+g).onclick=()=>{
+    gearState=g;updateGearDisplay();
+    if(g==='P'){applyBrake(1e5);engineForce=0;}
+  };
 });
 updateGearDisplay();
 
-function applyBrake(force) {
-  for(let i=0; i<4; i++) {
-    vehicle.setBrake(force, i);
-  }
+function applyBrake(f){
+  for(let i=0;i<4;i++)vehicle.setBrake(f,i);
 }
 
-function updateVehiclePhysics(delta) {
-  brakeForce = 0;
-  engineForce = 0;
+/* ---------- HUD ---------- */
+const hud=document.getElementById('hud');
 
-  if (gearState === 'P') {
+/* ---------- 애니메이션 루프 ---------- */
+const clock=new THREE.Clock();
+function animate(){
+  const dt=clock.getDelta();
+
+  /* --- 기어별 동작 --- */
+  if(gearState==='P'){
     applyBrake(1e5);
-    return;
-  } else if (gearState === 'N') {
-    applyBrake(0);
-  } else if (gearState === 'D') {
-    if (input.accel) engineForce = maxEngineForce;
-    brakeForce = input.brake ? maxBrakeForce : 0;
-  } else if (gearState === 'R') {
-    if (input.accel) engineForce = -maxEngineForce * 0.6;
-    brakeForce = input.brake ? maxBrakeForce : 0;
+    engineForce=0;
+  } else {
+    applyBrake(input.brake?maxBrakeForce:0);
+    if(gearState==='D') engineForce = input.accel ? maxEngineForce : 0;
+    else if(gearState==='R') engineForce = input.accel ? -maxEngineForce*0.6 : 0;
+    else engineForce=0; // N
   }
 
-  steeringValue = 0;
-  if (input.left) steeringValue += maxSteerVal;
-  if (input.right) steeringValue -= maxSteerVal;
+  /* --- 스티어링 --- */
+  steeringValue=input.left ? maxSteerVal : input.right ? -maxSteerVal : 0;
 
-  for (let i = 0; i < vehicle.wheelInfos.length; i++) {
-    if (vehicle.wheelInfos[i].isFrontWheel) {
-      vehicle.setSteeringValue(steeringValue, i);
-    }
-    vehicle.applyEngineForce(engineForce, i);
-    vehicle.setBrake(brakeForce, i);
-  }
-}
+  /* --- 힘 적용 --- */
+  vehicle.wheelInfos.forEach((w,i)=>{
+    if(w.isFrontWheel) vehicle.setSteeringValue(steeringValue,i);
+    vehicle.applyEngineForce(engineForce,i);
+  });
 
-function updateVisuals() {
-  chassisMesh.position.copy(chassisBody.position);
-  chassisMesh.quaternion.copy(chassisBody.quaternion);
+  world.step(1/60,dt);
 
-  for (let i = 0; i < vehicle.wheelInfos.length; i++) {
+  /* --- 시각 동기화 --- */
+  carMesh.position.copy(chassisBody.position);
+  carMesh.quaternion.copy(chassisBody.quaternion);
+  vehicle.wheelInfos.forEach((w,i)=>{
     vehicle.updateWheelTransform(i);
-    const t = vehicle.wheelInfos[i].worldTransform;
-    wheelMeshes[i].position.copy(t.position);
-    wheelMeshes[i].quaternion.copy(t.quaternion);
-    wheelMeshes[i].rotateX(Math.PI / 2);
-  }
-}
+    wheelMeshes[i].position.copy(w.worldTransform.position);
+    wheelMeshes[i].quaternion.copy(w.worldTransform.quaternion);
+  });
 
-function updateCamera() {
-  const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
-  const cameraOffset = relativeCameraOffset.applyQuaternion(chassisMesh.quaternion).add(chassisMesh.position);
-  camera.position.lerp(cameraOffset, 0.1);
+  /* --- 카메라: 앞에서 뒤를 봄 --- */
+  const offset=new THREE.Vector3(0,5,10).applyQuaternion(carMesh.quaternion);
+  camera.position.lerp(carMesh.position.clone().add(offset),0.1);
+  const backDir=new THREE.Vector3(0,0,-1).applyQuaternion(carMesh.quaternion);
+  camera.lookAt(carMesh.position.clone().add(backDir.multiplyScalar(15)));
 
-  const carForward = new THREE.Vector3(0, 0, 1).applyQuaternion(chassisMesh.quaternion);
-  const lookAtPos = chassisMesh.position.clone().add(carForward.multiplyScalar(15));
-  camera.lookAt(lookAtPos);
-}
+  /* --- HUD --- */
+  hud.textContent=`속도: ${Math.round(chassisBody.velocity.length()*3.6)} km/h`;
 
-function updateHUD() {
-  const velocity = chassisBody.velocity.length();
-  const kmh = Math.round(velocity * 3.6);
-  hud.textContent = `속도: ${kmh} km/h`;
-}
-
-const clock = new THREE.Clock();
-
-function animate() {
+  renderer.render(scene,camera);
   requestAnimationFrame(animate);
-
-  const delta = clock.getDelta();
-  updateVehiclePhysics(delta);
-
-  world.step(1/60, delta, 3);
-  updateVisuals();
-  updateCamera();
-  updateHUD();
-
-  renderer.render(scene, camera);
 }
 animate();
 </script>
