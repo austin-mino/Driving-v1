@@ -231,7 +231,7 @@ function updateGearDisplay(){
     console.log("현재 기어 상태:", gearState);                               // ✅ 기어 변속 사운드 재생
     updateGearDisplay();
     playGearShift(); 
-    if(g==='P'){ applyBrake(1e5); engineForce=0; }
+    if(g !==='P')applyBrake(0);
   };
 });
 function applyBrake(f){
