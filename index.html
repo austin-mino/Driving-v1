@@ -221,7 +221,8 @@ function updateGearDisplay(){
 }
 ['P','R','N','D'].forEach(g=>{
   document.getElementById('gear'+g).onclick=()=>{
-    gearState=g;updateGearDisplay();
+    gearState=g;
+    console.log("현재 기어 상태:", gearState); // → animate 루프나 버튼 클릭 시 출력updateGearDisplay();
     if(g==='P'){applyBrake(1e5);engineForce=0;}
   };
 });
