@@ -172,7 +172,13 @@ const wheelOpts={
   maxSuspensionForce:100000,rollInfluence:0.01,axleLocal:new CANNON.Vec3(-1,0,0),
   maxSuspensionTravel:0.3,useCustomSlidingRotationalSpeed:true,customSlidingRotationalSpeed:-30
 };
-[[-1.2,0,2.4,true],[1.2,0,2.4,true],[-1.2,0,-2.4,false],[1.2,0,-2.4,false]].forEach(([x,y,z,front])=>{
+const wheelPositions = [
+  [-1.2, 0, 2.4, true],
+  [1.2, 0, 2.4, true],
+  [-1.2, 0, -2.4, false],
+  [1.2, 0, -2.4, false]
+];
+  wheelPositions.forEach(([x,y,z,front])=>{
   vehicle.addWheel({...wheelOpts,chassisConnectionPointLocal:new CANNON.Vec3(x,y,z),isFrontWheel:front});
 });
 vehicle.addToWorld(world);
