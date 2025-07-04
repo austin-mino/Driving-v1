@@ -25,7 +25,7 @@
 <body>
   <div id="rotateWarning">가로 모드로 전환해주세요</div>
   <div id="hud">속도: 0 km/h</div>
-  <div id="gearDisplay">기어: N</div>
+  <div id="gearDisplay">기어: P</div>
 
   <!-- 좌/우 스티어링 -->
   <div id="controlsLeft">
@@ -113,7 +113,7 @@ for(let i=0;i<segments;i++){
 const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
 const chassisBody=new CANNON.Body({mass:110});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(0,1.5,0);
+chassisBody.position.set(0,2,0);
 chassisBody.quaternion.set(0,0,0,1);
 chassisBody.angularDamping=0.5;
 chassisBody.linearDamping = 0.1;  // 속도 감쇠 (살짝 추가)
@@ -174,7 +174,7 @@ const wheelOpts={
   maxSuspensionForce:100000,rollInfluence:0.01,axleLocal:new CANNON.Vec3(-1,0,0),
   maxSuspensionTravel:0.3,useCustomSlidingRotationalSpeed:true,customSlidingRotationalSpeed:-30
 };
-[[-1.2,0,2.4,true],[1.2,0,2.4,true],[-1.2,0,-2.4,false],[1.2,0,-2.4,false]].forEach(([x,y,z,front])=>{
+[[-1.2,-0.5,2.4,true],[1.2,-0.5,2.4,true],[-1.2,-0.3,-2.4,false],[1.2,-0.3,-2.4,false]].forEach(([x,y,z,front])=>{
   vehicle.addWheel({...wheelOpts,chassisConnectionPointLocal:new CANNON.Vec3(x,y,z),isFrontWheel:front});
 });
 vehicle.addToWorld(world);
