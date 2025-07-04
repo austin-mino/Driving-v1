@@ -219,11 +219,13 @@ const gearDisplay=document.getElementById('gearDisplay');
 function updateGearDisplay(){
   gearDisplay.textContent=`기어: ${gearState}`;
 }
-['P','R','N','D'].forEach(g=>{
+  ['P','R','N','D'].forEach(g=>{
   document.getElementById('gear'+g).onclick=()=>{
-    gearState=g;
-    console.log("현재 기어 상태:", gearState); // → animate 루프나 버튼 클릭 시 출력updateGearDisplay();
-    if(g==='P'){applyBrake(1e5);engineForce=0;}
+    gearState = g;
+    console.log("현재 기어 상태:", gearState);   // ✅ 로그 출력
+    playGearShift();                              // ✅ 기어 변속 사운드 재생
+    updateGearDisplay();
+    if(g==='P'){ applyBrake(1e5); engineForce=0; }
   };
 });
 updateGearDisplay();
