@@ -222,9 +222,9 @@ function updateGearDisplay(){
   ['P','R','N','D'].forEach(g=>{
   document.getElementById('gear'+g).onclick=()=>{
     gearState = g;
-    console.log("현재 기어 상태:", gearState);   // ✅ 로그 출력
-    playGearShift();                              // ✅ 기어 변속 사운드 재생
+    console.log("현재 기어 상태:", gearState);                               // ✅ 기어 변속 사운드 재생
     updateGearDisplay();
+    playGearShift(); 
     if(g==='P'){ applyBrake(1e5); engineForce=0; }
   };
 });
