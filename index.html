@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D 자동차 게임 – 원형 트랙 버전</title>
+  <title>3D 자동차 게임</title>
   <style>
     body{margin:0;overflow:hidden;background:#121212;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;color:#fff}
     #rotateWarning{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);
@@ -113,7 +113,7 @@ for(let i=0;i<segments;i++){
 const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
 const chassisBody=new CANNON.Body({mass:110});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(0,2.5,0);
+chassisBody.position.set(0,1.5,0);
 chassisBody.angularDamping=0.5;
 world.addBody(chassisBody);
 
@@ -176,6 +176,7 @@ const wheelOpts={
   vehicle.addWheel({...wheelOpts,chassisConnectionPointLocal:new CANNON.Vec3(x,y,z),isFrontWheel:front});
 });
 vehicle.addToWorld(world);
+for(let i=0; i<2; i++) world.step(1/60);
 
 /* ---------- 휠 시각 ---------- */
 const wheelMeshes=[];
