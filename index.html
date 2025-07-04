@@ -167,8 +167,8 @@ const vehicle=new CANNON.RaycastVehicle({
   chassisBody, indexRightAxis:0, indexUpAxis:1, indexForwardAxis:2
 });
 const wheelOpts={
-  radius:0.4,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:30,
-  suspensionRestLength:0.4,frictionSlip:5,dampingRelaxation:2.3,dampingCompression:4.4,
+  radius:0.4,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:40,
+  suspensionRestLength:0.5,frictionSlip:5,dampingRelaxation:2.5,dampingCompression:4.5,
   maxSuspensionForce:100000,rollInfluence:0.01,axleLocal:new CANNON.Vec3(-1,0,0),
   maxSuspensionTravel:0.3,useCustomSlidingRotationalSpeed:true,customSlidingRotationalSpeed:-30
 };
