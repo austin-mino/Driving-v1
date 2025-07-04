@@ -181,15 +181,17 @@ vehicle.addToWorld(world);
 for(let i=0; i<2; i++) world.step(1/60);
 
 /* ---------- 휠 시각 ---------- */
-const wheelMeshes=[];
-vehicle.wheelInfos.forEach(w=>{
-  const m=new THREE.Mesh(
-    new THREE.CylinderGeometry(w.radius,w.radius,0.4,32),
-    new THREE.MeshStandardMaterial({color:0x111111,metalness:0.7,roughness:0.5})
-  );
-  m.rotation.z=Math.PI/2;
-  scene.add(m);
-  wheelMeshes.push(m);
+const wheelMeshes = [];
+vehicle.wheelInfos.forEach(wheel => {
+  const geo = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.4, 32);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.5 });
+  const mesh = new THREE.Mesh(geo, mat);
+  
+  mesh.rotation.x = Math.PI / 2;
+
+  mesh.castShadow = true;
+  scene.add(mesh);
+  wheelMeshes.push(mesh);
 });
 
 /* ---------- 조명 ---------- */
