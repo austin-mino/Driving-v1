@@ -25,7 +25,7 @@
 <body>
   <div id="rotateWarning">가로 모드로 전환해주세요</div>
   <div id="hud">속도: 0 km/h</div>
-  <div id="gearDisplay">기어: P</div>
+  <div id="gearDisplay">기어: N</div>
 
   <!-- 좌/우 스티어링 -->
   <div id="controlsLeft">
@@ -113,7 +113,7 @@ for(let i=0;i<segments;i++){
 const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
 const chassisBody=new CANNON.Body({mass:110});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(0,1.5,0);
+chassisBody.position.set(0,0,0);
 chassisBody.angularDamping=0.5;
 world.addBody(chassisBody);
 
