@@ -113,8 +113,10 @@ for(let i=0;i<segments;i++){
 const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
 const chassisBody=new CANNON.Body({mass:110});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(0,0,0);
+chassisBody.position.set(0,1.5,0);
+chassisBody.quaternion.set(0,0,0,1);
 chassisBody.angularDamping=0.5;
+chassisBody.linearDamping = 0.1;  // 속도 감쇠 (살짝 추가)
 world.addBody(chassisBody);
 
 /* ---------- 자동차(시각) – 처음 버전과 동일 ---------- */
