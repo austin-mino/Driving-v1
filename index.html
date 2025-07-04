@@ -113,7 +113,7 @@ for(let i=0;i<segments;i++){
 const chassisShape=new CANNON.Box(new CANNON.Vec3(1.5,0.5,3));
 const chassisBody=new CANNON.Body({mass:150});
 chassisBody.addShape(chassisShape);
-chassisBody.position.set(0,2,0);
+chassisBody.position.set(0,2.5,0);
 chassisBody.angularDamping=0.5;
 world.addBody(chassisBody);
 
@@ -167,8 +167,8 @@ const vehicle=new CANNON.RaycastVehicle({
   chassisBody, indexRightAxis:0, indexUpAxis:1, indexForwardAxis:2
 });
 const wheelOpts={
-  radius:0.5,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:30,
-  suspensionRestLength:0.3,frictionSlip:5,dampingRelaxation:2.3,dampingCompression:4.4,
+  radius:0.6,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:30,
+  suspensionRestLength:0.5,frictionSlip:5,dampingRelaxation:2.3,dampingCompression:4.4,
   maxSuspensionForce:100000,rollInfluence:0.01,axleLocal:new CANNON.Vec3(-1,0,0),
   maxSuspensionTravel:0.3,useCustomSlidingRotationalSpeed:true,customSlidingRotationalSpeed:-30
 };
@@ -212,7 +212,7 @@ function bind(b,prop){
 [['left',btnRight],['right',btnLeft],['accel',btnAccel],['brake',btnBrake]].forEach(([p,b])=>bind(b,p));
 
 let engineForce=0,brakeForce=0;
-const maxEngineForce=2500,maxBrakeForce=400,maxSteerVal=Math.PI/8;
+const maxEngineForce=1200,maxBrakeForce=500,maxSteerVal=Math.PI/8;
 let steeringValue=0,gearState='P';
 const gearDisplay=document.getElementById('gearDisplay');
 
