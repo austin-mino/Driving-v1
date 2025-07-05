@@ -497,6 +497,8 @@ vehicle.wheelInfos.forEach((wheel, i) => {
       console.log(`Gear: ${gearState}, EngineForce: ${engineForce}, Velocity: ${(velocity * 3.6).toFixed(2)} km/h`);
 
       renderer.render(scene, camera);
+
+      console.log(`input.accel: ${input.accel}, maxEngineForce: ${maxEngineForce}`);
       
     }
     animate();
