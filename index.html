@@ -330,7 +330,7 @@
           hud = document.getElementById('hud');
 
     // 초기 기어 상태
-    let gearState = 'D';
+    let gearState = 'P';
 
     // 키보드 이벤트 처리
     window.addEventListener('keydown', e => {
@@ -393,8 +393,8 @@
         input[prop] = false;
       }, { passive: false });
     }
-    bindButton(btnLeft, 'right');
-    bindButton(btnRight, 'left');
+    bindButton(btnLeft, 'left');
+    bindButton(btnRight, 'right');
     bindButton(btnAccel, 'accel');
     bindButton(btnBrake, 'brake');
 
@@ -450,8 +450,8 @@
 
       // 조향 입력에 따른 조향 값 적용
       steeringValue = 0;
-      if(input.left) steeringValue += maxSteerVal;
-      if(input.right) steeringValue -= maxSteerVal;
+      if(input.left) steeringValue -= maxSteerVal;
+      if(input.right) steeringValue += maxSteerVal;
 
       vehicle.setSteeringValue(steeringValue, 0);
       vehicle.setSteeringValue(steeringValue, 1);
