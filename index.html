@@ -193,9 +193,9 @@
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(0, 2.2, 0);
+    chassisBody.position.set(0, 1.6, 0);
     chassisBody.angularDamping = 0.5;
-    chassisBody.linearDamping = 0.01;
+    chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
 
     // 자동차 시각 모델 (둥근 차체)
@@ -275,7 +275,7 @@
       radius: 0.5,
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 40,
-      suspensionRestLength: 0.4,
+      suspensionRestLength: 0.6,
       frictionSlip: 5,
       dampingRelaxation: 2.5,
       dampingCompression: 4.5,
@@ -358,6 +358,7 @@
         case '3': setGear('N'); break;
         case '4': setGear('D'); break;
       }
+      console.log(`keydown: ${e.key}`);
     });
     window.addEventListener('keyup', e => {
       switch(e.key.toLowerCase()) {
@@ -378,21 +379,21 @@
           input.brake = false;
           break;
       }
+      console.log(`keyup: ${e.key}`);
     });
 
-    // 모바일 버튼 바인딩 (좌우 조향 좌우 바뀐 문제 수정)
+    // 모바일 버튼 바인딩
     function bindButton(button, prop) {
-      button.addEventListener('mousedown', () => input[prop] = true);
-      button.addEventListener('mouseup', () => input[prop] = false);
-      button.addEventListener('touchstart', e => {
-        e.preventDefault();
-        input[prop] = true;
-      }, { passive: false });
-      button.addEventListener('touchend', e => {
-        e.preventDefault();
-        input[prop] = false;
-      }, { passive: false });
+      const setTrue = e => { e.preventDefault(); input[prop] = true; };
+      const setFalse = e => { e.preventDefault(); input[prop] = false; };
+    
+      button.addEventListener('mousedown', setTrue);
+      button.addEventListener('mouseup', setFalse);
+      button.addEventListener('touchstart', setTrue, { passive: false });
+      button.addEventListener('touchend', setFalse, { passive: false });
+      button.addEventListener('touchcancel', setFalse, { passive: false }); 
     }
+
     bindButton(btnLeft, 'left');
     bindButton(btnRight, 'right');
     bindButton(btnAccel, 'accel');
@@ -450,6 +451,10 @@
       
       const dt = clock.getDelta();
 
+      for (let i = 0; i < 4; i++) {
+        console.log(`Wheel ${i} in contact: ${vehicle.wheelInfos[i].isInContact}`);
+      }
+
       // 조향 입력에 따른 조향 값 적용
       steeringValue = 0;
       if(input.left) steeringValue -= maxSteerVal;
@@ -470,7 +475,7 @@
         applyBrake(1e5); // P 또는 N는 강제 브레이크(정지)
       }
 
-      for(let i = 2; i < 4; i++) vehicle.applyEngineForce(engineForce, i);
+      for(let i = 0; i < 2; i++) vehicle.applyEngineForce(engineForce, i);
 
       // 물리 업데이트
       world.step(1/60);
@@ -501,7 +506,10 @@
       renderer.render(scene, camera);
 
       console.log(`input.accel: ${input.accel}, maxEngineForce: ${maxEngineForce}`);
-      
+
+      if (!document.hasFocus()) {
+        console.warn('🔻 브라우저 포커스가 사라졌습니다');
+      }
     }
     animate();
   </script>
