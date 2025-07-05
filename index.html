@@ -306,7 +306,7 @@
       const geometry = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.3, 32);
       const material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.5 });
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.rotation.z = Math.PI / 2;
+      mesh.rotation.y = Math.PI / 2;
       scene.add(mesh);
       wheelMeshes.push(mesh);
     });
@@ -451,7 +451,8 @@
       requestAnimationFrame(animate);
       frameCount++;
       if (frameCount % 30 === 0) {
-        console.log(`input.accel: ${input.accel}`);
+        console.log(`input.accel: ${input.accel}, maxEngineForce: ${maxEngineForce}`);
+        console.log(`Gear: ${gearState}, EngineForce: ${engineForce}, Velocity: ${(chassisBody.velocity.length() * 3.6).toFixed(2)} km/h`);
         for (let i = 0; i < 4; i++) {
           console.log(`Wheel ${i} in contact: ${vehicle.wheelInfos[i].isInContact}`);
         }
@@ -507,11 +508,8 @@
       // 속도 표시 (km/h)
       const velocity = chassisBody.velocity.length();
       hud.textContent = `속도: ${(velocity * 3.6).toFixed(1)} km/h`;
-      console.log(`Gear: ${gearState}, EngineForce: ${engineForce}, Velocity: ${(velocity * 3.6).toFixed(2)} km/h`);
-
+  
       renderer.render(scene, camera);
-
-      console.log(`input.accel: ${input.accel}, maxEngineForce: ${maxEngineForce}`);
 
       if (!document.hasFocus()) {
         console.warn('🔻 브라우저 포커스가 사라졌습니다');
