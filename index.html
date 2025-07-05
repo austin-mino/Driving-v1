@@ -330,7 +330,7 @@
           hud = document.getElementById('hud');
 
     // 초기 기어 상태
-    let gearState = 'P';
+    let gearState = 'D';
 
     // 키보드 이벤트 처리
     window.addEventListener('keydown', e => {
@@ -393,8 +393,8 @@
         input[prop] = false;
       }, { passive: false });
     }
-    bindButton(btnLeft, 'left');
-    bindButton(btnRight, 'right');
+    bindButton(btnLeft, 'right');
+    bindButton(btnRight, 'left');
     bindButton(btnAccel, 'accel');
     bindButton(btnBrake, 'brake');
 
@@ -405,7 +405,7 @@
 
     // 기어 상태에 따른 동작과 시각 피드백 함수
     const maxEngineForce = 1200;
-    const maxBrakeForce = 600;
+    const maxBrakeForce = 300;
     const maxSteerVal = Math.PI / 8;
     let engineForce = 0;
     let steeringValue = 0;
