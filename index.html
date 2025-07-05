@@ -393,15 +393,18 @@
       });
     }
     // 좌우 버튼 반전: 왼쪽버튼 누르면 right=true, 오른쪽버튼 누르면 left=true (모바일 전용)
-    [['left', btnRight], ['right', btnLeft], ['accel', btnAccel], ['brake', btnBrake]].forEach(([p, b]) =>
-      bind(b, p)
-    );
+   [['left', btnLeft], ['right', btnRight], ['accel', btnAccel], ['brake', btnBrake]].forEach(([p, b]) => bind(b, p));
 
     /* ---------- 기어 조작 및 시각 피드백 ---------- */
-    let gearState = 'P';
-    const gearDisplay = document.getElementById('gearDisplay');
-    const gearButtons = ['P', 'R', 'N', 'D'].map((g) => document.getElementById('gear' + g));
-
+    if (gearState === 'P') {
+  applyBrake(1e5);
+  engineForce = 0;
+} else {
+  applyBrake(input.brake ? maxBrakeForce : 0);
+  if (gearState === 'D') engineForce = input.accel ? maxEngineForce : 0;
+  else if (gearState === 'R') engineForce = input.accel ? -maxEngineForce * 0.6 : 0;
+  else engineForce = 0; // N
+}
     function updateGearDisplay() {
       gearDisplay.textContent = `기어: ${gearState}`;
 
