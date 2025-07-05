@@ -162,7 +162,7 @@
       new THREE.PlaneGeometry(2000, 2000),
       new THREE.MeshStandardMaterial({ color: 0x444444 })
     );
-    groundMesh.rotation.z = -Math.PI / 2;
+    groundMesh.rotation.x = -Math.PI / 2;
     scene.add(groundMesh);
 
     // 원형 트랙 울타리 생성
@@ -306,7 +306,7 @@
       const geometry = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.3, 32);
       const material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.5 });
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.rotation.x = Math.PI / 2;
+      mesh.rotation.z = Math.PI / 2;
       scene.add(mesh);
       wheelMeshes.push(mesh);
     });
@@ -445,15 +445,19 @@
     // 애니메이션 루프
     const clock = new THREE.Clock();
 
+    let frameCount = 0;
+    
     function animate() {
       requestAnimationFrame(animate);
-      console.log(`input.accel: ${input.accel}`);
+      frameCount++;
+      if (frameCount % 30 === 0) {
+        console.log(`input.accel: ${input.accel}`);
+        for (let i = 0; i < 4; i++) {
+          console.log(`Wheel ${i} in contact: ${vehicle.wheelInfos[i].isInContact}`);
+        }
+      }
       
       const dt = clock.getDelta();
-
-      for (let i = 0; i < 4; i++) {
-        console.log(`Wheel ${i} in contact: ${vehicle.wheelInfos[i].isInContact}`);
-      }
 
       // 조향 입력에 따른 조향 값 적용
       steeringValue = 0;
