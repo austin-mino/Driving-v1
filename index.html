@@ -162,7 +162,7 @@
       new THREE.PlaneGeometry(2000, 2000),
       new THREE.MeshStandardMaterial({ color: 0x444444 })
     );
-    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.rotation.z = -Math.PI / 2;
     scene.add(groundMesh);
 
     // 원형 트랙 울타리 생성
@@ -193,7 +193,7 @@
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(0, 1.6, 0);
+    chassisBody.position.set(0, 1.4, 0);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
@@ -275,7 +275,7 @@
       radius: 0.5,
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 40,
-      suspensionRestLength: 0.6,
+      suspensionRestLength: 0.7,
       frictionSlip: 5,
       dampingRelaxation: 2.5,
       dampingCompression: 4.5,
@@ -288,7 +288,7 @@
     };
 
     // 앞뒤 휠 위치와 앞바퀴 여부 설정
-   [[-1.2, 0.3, 2.4, true], [1.2, 0.3, 2.4, true], [-1.2, 0.3, -2.4, false], [1.2, 0.3, -2.4, false]].forEach(
+   [[-1.2, 0.2, 2.4, true], [1.2, 0.2, 2.4, true], [-1.2, 0.2, -2.4, false], [1.2, 0.2, -2.4, false]].forEach(
       ([x, y, z, isFront]) => {
         vehicle.addWheel({
           ...wheelOptions,
@@ -490,6 +490,8 @@
         const t = vehicle.wheelInfos[i].worldTransform;
         wheelMeshes[i].position.copy(t.position);
         wheelMeshes[i].quaternion.copy(t.quaternion);
+
+        wheelMeshes[i].rotation.x += vehicle.wheelInfos[i].deltaRotation;
       }
 
       // 카메라 차량 뒤 따라가기 (부드럽게)
