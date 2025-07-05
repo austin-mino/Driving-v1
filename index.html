@@ -301,15 +301,15 @@
     vehicle.addToWorld(world);
 
     // 휠 메시 생성
-    const wheelMeshes = [];
-    vehicle.wheelInfos.forEach(wheel => {
-      const geometry = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.3, 32);
-      const material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.5 });
-      const mesh = new THREE.Mesh(geometry, material);
-      wheelMeshes[i].rotation.x = Math.PI / 2;
-      scene.add(mesh);
-      wheelMeshes.push(mesh);
-    });
+const wheelMeshes = [];
+vehicle.wheelInfos.forEach((wheel, i) => {
+  const geometry = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.3, 32);
+  const material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.7, roughness: 0.5 });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.x = Math.PI / 2;
+  scene.add(mesh);
+  wheelMeshes.push(mesh);
+});
 
     // 조명 세팅 (강화)
     scene.add(new THREE.AmbientLight(0xffffff, 1));
