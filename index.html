@@ -195,7 +195,7 @@
     chassisBody.addShape(chassisShape);
     chassisBody.position.set(0, 2.2, 0);
     chassisBody.angularDamping = 0.5;
-    chassisBody.linearDamping = 0.1;
+    chassisBody.linearDamping = 0.01;
     world.addBody(chassisBody);
 
     // 자동차 시각 모델 (둥근 차체)
@@ -471,7 +471,7 @@ vehicle.wheelInfos.forEach((wheel, i) => {
       for(let i = 2; i < 4; i++) vehicle.applyEngineForce(engineForce, i);
 
       // 물리 업데이트
-      world.step(1/60, dt, 3);
+      world.step(1/60);
 
       // 차량 메쉬 위치 및 회전 업데이트
       carMesh.position.copy(chassisBody.position);
@@ -494,8 +494,10 @@ vehicle.wheelInfos.forEach((wheel, i) => {
       // 속도 표시 (km/h)
       const velocity = chassisBody.velocity.length();
       hud.textContent = `속도: ${(velocity * 3.6).toFixed(1)} km/h`;
+      console.log(`Gear: ${gearState}, EngineForce: ${engineForce}, Velocity: ${(velocity * 3.6).toFixed(2)} km/h`);
 
       renderer.render(scene, camera);
+      
     }
     animate();
   </script>
