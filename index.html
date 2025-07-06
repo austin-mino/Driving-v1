@@ -133,6 +133,12 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
+    function updateCamera() {
+  const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
+  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
+  camera.position.lerp(cameraOffset, 0.1);
+  camera.lookAt(carMesh.position);
+    }
 
     // Cannon-es 월드 생성
     const world = new CANNON.World({
