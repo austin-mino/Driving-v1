@@ -292,14 +292,17 @@
     vehicle.addToWorld(world);
 
     // 휠 메시 생성 - 실제 타이어 모양에 가깝게 디자인 및 각도 조정
-    const wheelMeshes = [];
-    vehicle.wheelInfos.forEach((wheel, i) => {
-      const geometry = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.4, 24);
-      const material = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.rotation.set(0, 0, Math.PI / 2); // 바퀴가 옆을 보게 설정
-      scene.add(mesh);
-      wheelMeshes.push(mesh);
+    const wheelHolders = [];
+    vehicle.wheelInfos.forEach((wheel) => {
+      const holder = new THREE.Group();
+      scene.add(holder);
+      wheelHolders.push(holder);
+
+      const tireGeo = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.4, 24);
+      const tireMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
+      const tireMesh = new THREE.Mesh(tireGeo, tireMat);
+      tireMesh.rotation.z = Math.PI / 2; // 눕히기
+      holder.add(tireMesh);
     });
 
     // 조명 강화
@@ -537,11 +540,12 @@
       carMesh.quaternion.copy(chassisBody.quaternion);
 
       // 휠 메쉬 위치, 회전 업데이트
-      for(let i=0; i<wheelMeshes.length; i++) {
-        vehicle.updateWheelTransform(i);
-        const t = vehicle.wheelInfos[i].worldTransform;
-        wheelMeshes[i].position.copy(t.position);
-        wheelMeshes[i].quaternion.copy(t.quaternion);
+      for(let i=0; i<wheelHolders.length; i++) {
+      vehicle.updateWheelTransform(i);
+      const t = vehicle.wheelInfos[i].worldTransform;
+      wheelHolders[i].position.copy(t.position);
+      wheelHolders[i].quaternion.copy(t.quaternion);
+      }
 
         // 회전 애니메이션
         wheelMeshes[i].rotation.x += vehicle.wheelInfos[i].deltaRotation;
