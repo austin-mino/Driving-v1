@@ -118,21 +118,21 @@
     window.addEventListener('orientationchange', checkOrientation);
     checkOrientation();
 
-    // Three.js 기본 설정
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x222222);
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(0, 5, 15);
-    camera.lookAt(0, 0, 0);
+      // Three.js 기본 설정
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(0, 5, 15);
+    camera.lookAt(0, 0, 0); 
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
     // Cannon-es 월드 생성
     const world = new CANNON.World({
@@ -449,12 +449,13 @@
       return velocity.length() * 3.6;
     }
 
-    // 카메라 차량 뒤쪽 위치로 고정
-    function updateCamera() {
-      const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
-      const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
-      camera.position.lerp(cameraOffset, 0.1);
-      camera.lookAt(carMesh.position);
+     // 카메라 부드럽게 차량 뒤 따라가기
+      const relativeCameraOffset = new THREE.Vector3(0, 5, 15);
+      const cameraOffset = relativeCameraOffset.applyQuaternion(carMesh.quaternion).add(carMesh.position);
+      camera.position.lerp(cameraOffset, 0.1);
+      camera.lookAt(carMesh.position); 
+
+      renderer.render(scene, camera);
     }
 
     // 타이머 관리
