@@ -135,7 +135,6 @@
     });
 
     // ───────────────────────────────────────────────
-
 // 1. 월드 설정
 const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
 world.broadphase = new CANNON.SAPBroadphase(world);
@@ -202,9 +201,7 @@ for (let i = 0; i < numSegments; i++) {
     barrierMeshes.push(barrierMesh);
   });
 }
-
-// 5. 타원형 트랙 바닥 (extrude)
-const trackShape = new THREE.Shape();
+    const trackShape = new THREE.Shape();
 for (let i = 0; i <= numSegments; i++) {
   const angle = (i / numSegments) * 2 * Math.PI;
   const x = trackA * Math.cos(angle);
@@ -221,28 +218,6 @@ const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
 scene.add(mesh);
-
-// 6. 차량 바디 (chassisBody) 생성 예시
-const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
-const chassisBody = new CANNON.Body({ mass: 110 });
-chassisBody.addShape(chassisShape);
-chassisBody.angularDamping = 0.5;
-
-// 트랙 안쪽, 시작 위치 각도 (라디안)
-const startAngle = 0; // 0이면 x축 양의 방향
-const startX = (trackA - trackWidth) * Math.cos(startAngle);
-const startZ = (trackB - trackWidth) * Math.sin(startAngle);
-
-// 차량 시작 위치 설정 (y는 지면 위 적당히 0.5)
-chassisBody.position.set(startX, 0.5, startZ);
-world.addBody(chassisBody);
-
-
-
-
-    
-    
-
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
