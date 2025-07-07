@@ -187,12 +187,38 @@ scene.add(groundMesh);
     }
 
     const trackRadius = 80, trackSegments = 72;
-    for(let i = 0; i < trackSegments; i++) {
-      const angle = (i * 2 * Math.PI) / trackSegments;
-      const yOffset = Math.sin(i * 0.5) * 2; // 언덕 효과
-      createBarrier(Math.cos(angle) * (trackRadius - 1), yOffset, Math.sin(angle) * (trackRadius - 1), angle);
-      createBarrier(Math.cos(angle) * (trackRadius + 1), yOffset, Math.sin(angle) * (trackRadius + 1), angle);
-    }
+    // 경주 트랙 경로 (도넛 모양 곡선)
+const curve = new THREE.CurvePath();
+const trackRadius = 80;
+const segments = 100;
+for (let i = 0; i <= segments; i++) {
+  const angle = (i / segments) * Math.PI * 2;
+  const x = Math.cos(angle) * trackRadius;
+  const z = Math.sin(angle) * trackRadius;
+  const y = Math.sin(i * 0.2) * 1.5; // 약간의 언덕 효과
+  curve.add(new THREE.LineCurve3(
+    new THREE.Vector3(
+      Math.cos((i - 1) / segments * Math.PI * 2) * trackRadius,
+      Math.sin((i - 1) * 0.2) * 1.5,
+      Math.sin((i - 1) / segments * Math.PI * 2) * trackRadius
+    ),
+    new THREE.Vector3(x, y, z)
+  ));
+}
+
+// 트랙 지오메트리와 재질
+const roadGeo = new THREE.TubeGeometry(curve, 200, 2, 20, true);
+const roadTexture = new THREE.TextureLoader().load('https://threejsfundamentals.org/threejs/resources/images/road.jpg');
+roadTexture.wrapS = roadTexture.wrapT = THREE.RepeatWrapping;
+roadTexture.repeat.set(10, 1);
+
+const roadMat = new THREE.MeshStandardMaterial({
+  map: roadTexture,
+  side: THREE.DoubleSide
+});
+const roadMesh = new THREE.Mesh(roadGeo, roadMat);
+scene.add(roadMesh);
+    chassisBody.position.set(trackRadius, 2, 0); // 도로 위로 시작
 
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
