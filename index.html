@@ -455,7 +455,7 @@
   const carQuat = chassisBody.quaternion;
 
   // 차량 뒤쪽 위 위치 (카메라 위치)
-  const offset = new CANNON.Vec3(0, 4, 8);
+  const offset = new CANNON.Vec3(0, 4, 15);
   const rotatedOffset = carQuat.vmult(offset);
   const camPos = carPos.vadd(rotatedOffset);
 
