@@ -471,7 +471,7 @@ scene.add(mesh);
     // 차량 조향, 가속, 브레이크 처리
     function updateVehicleControls() {
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
-      const steerSpeed = 0;  // 조향이 변화하는 속도 (더 작을수록 느리게 반응)
+      const steerSpeed = 0.01;  // 조향이 변화하는 속도 (더 작을수록 느리게 반응)
 
 if (input.left) {
   steeringValue = Math.max(steeringValue - steerSpeed, -maxSteerVal);
