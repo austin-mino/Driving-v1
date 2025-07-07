@@ -224,11 +224,12 @@ scene.add(mesh);
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(100, 0.5, 0);
+    chassisBody.position.set(500, 0.5, 0);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
-    
+    chassisBody.quaternion.setFromEuler(0, Math.PI / 2, 0); // 왼쪽 바라보게
+
     // 자동차 시각 모델 (둥근 차체)
     function createRoundedCarBody() {
       const group = new THREE.Group();
