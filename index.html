@@ -218,6 +218,8 @@ const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
 scene.add(mesh);
+
+    const barrierLength = 8; // 바리어 한 개의 길이 (← 너무 길면 겹칠 수 있음)
     
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
