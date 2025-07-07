@@ -443,6 +443,7 @@ scene.add(mesh);
 
     // 차량 조향, 가속, 브레이크 처리
     function updateVehicleControls() {
+      steeringValue=0;
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
   steeringValue = maxSteerVal;
@@ -450,11 +451,7 @@ scene.add(mesh);
   steeringValue = -maxSteerVal;
 } else {
   steeringValue = 0;
-      } else {
-        // 중립으로 점진 복귀
-        if (steeringValue > 0) steeringValue = Math.max(steeringValue -100000000, 0);
-        else if (steeringValue < 0) steeringValue = Math.min(steeringValue +100000000, 0);
-      }
+      } 
 
       // 앞바퀴 조향에 적용
       vehicle.setSteeringValue(steeringValue, 0);
