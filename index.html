@@ -147,10 +147,24 @@
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     world.addBody(groundBody);
 
-    const groundMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2000, 2000),
-      new THREE.MeshStandardMaterial({ color: 0x444444 })
-    );
+    // 바닥 텍스처 로딩 및 적용
+const trackTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/texture/racetrack.jpg');
+trackTexture.wrapS = THREE.RepeatWrapping;
+trackTexture.wrapT = THREE.RepeatWrapping;
+trackTexture.repeat.set(20, 20); // 텍스처 반복 횟수 조정
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+sunLight.position.set(50, 100, 50);
+scene.add(sunLight);
+const groundMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(2000, 2000),
+  new THREE.MeshStandardMaterial({ map: trackTexture })
+);
+groundMesh.rotation.x = -Math.PI / 2;
+scene.add(groundMesh);
     groundMesh.rotation.x = -Math.PI / 2;
     scene.add(groundMesh);
 
