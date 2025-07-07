@@ -150,11 +150,6 @@ function resetCar() {
   const yRot = getYRotation(chassisBody.quaternion);
   chassisBody.quaternion.setFromEuler(0, yRot, 0);
 
-  // 속도 초기화
-  chassisBody.velocity.set(0, 0, 0);
-  chassisBody.angularVelocity.set(0, 0, 0);
-}
-
 // 쿼터니언에서 y축 회전값 추출
 function getYRotation(q) {
   const siny_cosp = 2 * (q.w * q.y + q.z * q.x);
