@@ -228,7 +228,6 @@ scene.add(mesh);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
-    chassisBody.quaternion.setFromEuler(0, Math.PI / 2, 0); // 왼쪽 바라보게
     
     // 자동차 시각 모델 (둥근 차체)
     function createRoundedCarBody() {
