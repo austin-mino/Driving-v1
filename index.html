@@ -184,7 +184,7 @@
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(0, 1, 0);
+    chassisBody.position.set(0, 0.4, 0);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
@@ -451,21 +451,10 @@
 
     // 카메라 차량 뒤쪽 위치로 고정
     function updateCamera() {
-  const carPos = chassisBody.position;
-  const carQuat = chassisBody.quaternion;
-
-  // 차량 뒤쪽 위 위치 (카메라 위치)
-  const offset = new CANNON.Vec3(0, 4, 15);
-  const rotatedOffset = carQuat.vmult(offset);
-  const camPos = carPos.vadd(rotatedOffset);
-
-  camera.position.lerp(new THREE.Vector3(camPos.x, camPos.y, camPos.z), 0.1);
-
-  // 차량 앞쪽 방향으로 시선 고정
-  const targetOffset = new CANNON.Vec3(0, 2, 5);  // 약간 앞쪽을 바라보게
-  const rotatedTarget = carQuat.vmult(targetOffset);
-  const targetPos = carPos.vadd(rotatedTarget);
-  camera.lookAt(new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z));
+  const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
+  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
+  camera.position.lerp(cameraOffset, 0.1);
+  camera.lookAt(carMesh.position);
     }
 
     // 타이머 관리
