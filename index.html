@@ -184,7 +184,7 @@
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
     chassisBody.addShape(chassisShape);
-    chassisBody.position.set(0, 1.4, 0);
+    chassisBody.position.set(0, 1, 0);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
@@ -264,7 +264,7 @@
 
     // 휠 옵션 - 디자인 및 물리 조정
     const wheelOptions = {
-      radius: 0.55,
+      radius: 0.4,
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 45,
       suspensionRestLength: 0.7,
@@ -280,7 +280,7 @@
     };
 
     // 휠 위치 및 앞바퀴 여부 설정
-    [[-1.2, 0.2, 2.4, true], [1.2, 0.2, 2.4, true], [-1.2, 0.2, -2.4, false], [1.2, 0.2, -2.4, false]].forEach(
+    [[-1.2, 0.1, 2.4, true], [1.2, 0.1, 2.4, true], [-1.2, 0.1, -2.4, false], [1.2, 0.2, -2.4, false]].forEach(
       ([x, y, z, isFront]) => {
         vehicle.addWheel({
           ...wheelOptions,
@@ -405,9 +405,9 @@
     function updateVehicleControls() {
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
-        steeringValue = Math.min(steeringValue + 0.02, maxSteerVal);
+        steeringValue = Math.min(steeringValue - 0.02, maxSteerVal);
       } else if (input.right) {
-        steeringValue = Math.max(steeringValue - 0.02, -maxSteerVal);
+        steeringValue = Math.max(steeringValue + 0.02, -maxSteerVal);
       } else {
         // 중립으로 점진 복귀
         if (steeringValue > 0) steeringValue = Math.max(steeringValue - 0.04, 0);
