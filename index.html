@@ -135,163 +135,90 @@
     });
 
     // ───────────────────────────────────────────────
-// Cannon-es 월드 생성
-// cannon.js
-import * as CANNON from 'cannon-es';
 
-export const world = new CANNON.World({
-  gravity: new CANNON.Vec3(0, -9.82, 0),
-});
-
+// 1. 월드 설정
+const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
 world.broadphase = new CANNON.SAPBroadphase(world);
-world.defaultContactMaterial.friction = 0.4;
+world.defaultContactMaterial.friction = 0.6;
 
-// 트랙 파라미터
-export const trackA = 100;
-export const trackB = 60;
-export const trackWidth = 8;
+// 2. 지면 생성
+const groundBody = new CANNON.Body({ mass: 0 });
+groundBody.addShape(new CANNON.Plane());
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+world.addBody(groundBody);
 
-// 지면
-const ground = new CANNON.Body({ mass: 0 });
-ground.addShape(new CANNON.Plane());
-ground.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-world.addBody(ground);
+// 3. 트랙 타원 파라미터
+const trackA = 100;  // x 방향 반지름
+const trackB = 60;   // z 방향 반지름
+const trackWidth = 8;
+const numSegments = 100; // 트랙 구성 정밀도
 
-// 트랙 바닥
-const trackShape = new CANNON.Box(new CANNON.Vec3(trackA, 0.1, trackB));
-const trackBody = new CANNON.Body({ mass: 0 });
-trackBody.addShape(trackShape);
-trackBody.position.set(0, 0, 0);
-world.addBody(trackBody);
-
-// 차량
-export const carBody = new CANNON.Body({
-  mass: 1,
-  shape: new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)),
-  position: new CANNON.Vec3(trackA - 2, 0.5, 0),
-});
-world.addBody(carBody);
-
-// 바리어 (하나의 벽처럼 연결)
-const numBarriers = 180;
-const barrierLength = 2;
+// 4. 바리어 생성
 const barrierHeight = 2;
 const barrierThickness = 1;
-const barrierShape = new CANNON.Box(new CANNON.Vec3(barrierLength / 2, barrierHeight / 2, barrierThickness / 2));
+const barrierLength = 4;
 
-for (let i = 0; i < numBarriers; i++) {
-  const angle = (i / numBarriers) * 2 * Math.PI;
+// Three.js 재질 재사용
+const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const barrierMeshes = [];
+
+for (let i = 0; i < numSegments; i++) {
+  const angle = (i / numSegments) * 2 * Math.PI;
+
+  // 중앙 타원 경로 좌표
   const cx = Math.cos(angle);
   const sz = Math.sin(angle);
 
-  const x = (trackA + trackWidth / 2) * cx;
-  const z = (trackB + trackWidth / 2) * sz;
+  const innerX = (trackA - trackWidth / 2) * cx;
+  const innerZ = (trackB - trackWidth / 2) * sz;
 
-  const rotationY = -Math.atan2(trackB * cx, -trackA * sz);
+  const outerX = (trackA + trackWidth / 2) * cx;
+  const outerZ = (trackB + trackWidth / 2) * sz;
 
-  const barrierBody = new CANNON.Body({ mass: 0 });
-  barrierBody.addShape(barrierShape);
-  barrierBody.position.set(x, barrierHeight / 2, z);
-  barrierBody.quaternion.setFromEuler(0, rotationY, 0);
-  world.addBody(barrierBody);
+  // 회전각: 접선 방향을 따라 회전
+  const rotationY = -Math.atan2(
+    (trackB * Math.cos(angle)),
+    (-trackA * Math.sin(angle))
+  );
+
+  // 왼쪽(안쪽) 바리어
+  [innerX, innerZ].forEach((_, index) => {
+    const isInner = index === 0;
+    const x = isInner ? innerX : outerX;
+    const z = isInner ? innerZ : outerZ;
+
+    const barrierShape = new CANNON.Box(new CANNON.Vec3(barrierLength / 2, barrierHeight / 2, barrierThickness / 2));
+    const barrierBody = new CANNON.Body({ mass: 0 });
+    barrierBody.addShape(barrierShape);
+    barrierBody.position.set(x, barrierHeight / 2, z);
+    barrierBody.quaternion.setFromEuler(0, rotationY, 0);
+    world.addBody(barrierBody);
+
+    const barrierGeom = new THREE.BoxGeometry(barrierLength, barrierHeight, barrierThickness);
+    const barrierMesh = new THREE.Mesh(barrierGeom, barrierMat);
+    barrierMesh.position.copy(barrierBody.position);
+    barrierMesh.quaternion.copy(barrierBody.quaternion);
+    scene.add(barrierMesh);
+    barrierMeshes.push(barrierMesh);
+  });
 }
-    // main.js
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { world, carBody, trackA, trackB } from './cannon.js';
-
-// Three.js 기본 설정
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111111);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 50, 150);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-
-// 빛
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 20, 10);
-scene.add(light);
-
-// 차량 메시
-const carMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(2, 1, 4),
-  new THREE.MeshStandardMaterial({ color: 0xff3333 })
-);
-scene.add(carMesh);
-
-// 트랙 시각화 (간단한 평면)
-const track = new THREE.Mesh(
-  new THREE.PlaneGeometry(trackA * 2, trackB * 2),
-  new THREE.MeshStandardMaterial({ color: 0x444444, side: THREE.DoubleSide })
-);
-track.rotation.x = -Math.PI / 2;
-scene.add(track);
-
-// 스타트라인
-const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(trackA - 5, 0.01, -5),
-  new THREE.Vector3(trackA - 5, 0.01, 5)
-]);
-const startLine = new THREE.Line(lineGeometry, lineMaterial);
-scene.add(startLine);
-
-// 상태
-let passedStart = false;
-let finished = false;
-let startTime = performance.now();
-let lastPos = carBody.position.clone();
-
-// 애니메이션 루프
-function animate() {
-  requestAnimationFrame(animate);
-  world.step(1 / 60);
-
-  // 차량 위치 업데이트
-  carMesh.position.copy(carBody.position);
-  carMesh.quaternion.copy(carBody.quaternion);
-
-  // 스타트라인 통과 감지
-  if (!finished && hasCrossedStart(lastPos, carBody.position)) {
-    if (passedStart) {
-      finished = true;
-      const end = performance.now();
-      alert(`✅ 완주 시간: ${((end - startTime) / 1000).toFixed(2)}초`);
-    } else {
-      passedStart = true;
-    }
+    const trackShape = new THREE.Shape();
+for (let i = 0; i <= numSegments; i++) {
+  const angle = (i / numSegments) * 2 * Math.PI;
+  const x = trackA * Math.cos(angle);
+  const z = trackB * Math.sin(angle);
+  if (i === 0) {
+    trackShape.moveTo(x, z);
+  } else {
+    trackShape.lineTo(x, z);
   }
-
-  lastPos.copy(carBody.position);
-  renderer.render(scene, camera);
 }
-
-// 스타트라인 체크
-function hasCrossedStart(prev, curr) {
-  return prev.x < trackA && curr.x >= trackA && Math.abs(curr.z) < 5;
-}
-
-// 재시작
-function resetCar() {
-  carBody.velocity.setZero();
-  carBody.angularVelocity.setZero();
-  carBody.position.set(trackA - 2, 0.5, 0);
-  carBody.quaternion.setFromEuler(0, 0, 0);
-  passedStart = false;
-  finished = false;
-  startTime = performance.now();
-}
-window.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'r') resetCar();
-});
-
-animate();
+const extrudeSettings = { depth: trackWidth, bevelEnabled: false };
+const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
+const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
+const mesh = new THREE.Mesh(geometry, material);
+mesh.rotation.x = -Math.PI / 2;
+scene.add(mesh);
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
