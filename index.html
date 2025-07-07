@@ -445,9 +445,9 @@ scene.add(mesh);
     function updateVehicleControls() {
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
-        steeringValue = Math.min(steeringValue - 0.02, maxSteerVal);
+        steeringValue = Math.min(steeringValue - 0.005, maxSteerVal);
       } else if (input.right) {
-        steeringValue = Math.max(steeringValue + 0.02, -maxSteerVal);
+        steeringValue = Math.max(steeringValue + 0.005, -maxSteerVal);
       } else {
         // 중립으로 점진 복귀
         if (steeringValue > 0) steeringValue = Math.max(steeringValue - 0.04, 0);
