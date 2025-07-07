@@ -121,7 +121,7 @@
     // Three.js 기본 설정
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x222222);
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
     camera.position.set(0, 5, 15);
     camera.lookAt(0, 0, 0);
 
@@ -217,6 +217,7 @@ const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
 const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
+mesh.position.y = -trackWidth / 2;  // ← 이 줄 추가
 scene.add(mesh);
     
     // 자동차 차체 물리 (박스)
