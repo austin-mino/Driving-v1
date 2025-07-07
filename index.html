@@ -96,8 +96,11 @@
   <div id="driveControls">
     <button id="btnAccel" class="controlBtn">엑셀</button>
     <button id="btnBrake" class="controlBtn">브레이크</button>
+  <div id="reset">
+    <!-- 기어 선택 아래에 추가 -->
+    <button id="btnReset" class="controlBtn">차량 리셋</button>
   </div>
-  <!-- 기어 선택 -->
+    <!-- 기어 선택 -->
   <div id="gearControls">
     <button id="gearP" class="controlBtn">P</button>
     <button id="gearR" class="controlBtn">R</button>
@@ -133,7 +136,31 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
+document.getElementById('btnReset').addEventListener('click', resetCar);
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'r') resetCar();
+});
 
+function resetCar() {
+  // 위치는 그대로, 높이 약간 위로
+  const pos = chassisBody.position;
+  chassisBody.position.set(pos.x, pos.y + 1.5, pos.z);
+
+  // 회전 초기화 (y축은 유지해서 방향은 그대로)
+  const yRot = getYRotation(chassisBody.quaternion);
+  chassisBody.quaternion.setFromEuler(0, yRot, 0);
+
+  // 속도 초기화
+  chassisBody.velocity.set(0, 0, 0);
+  chassisBody.angularVelocity.set(0, 0, 0);
+}
+
+// 쿼터니언에서 y축 회전값 추출
+function getYRotation(q) {
+  const siny_cosp = 2 * (q.w * q.y + q.z * q.x);
+  const cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+  return Math.atan2(siny_cosp, cosy_cosp);
+}
     // ───────────────────────────────────────────────
 // 1. 월드 설정
 const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
