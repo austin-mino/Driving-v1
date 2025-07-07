@@ -134,91 +134,68 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Cannon-es 월드 생성
-    const world = new CANNON.World({
-      gravity: new CANNON.Vec3(0, -9.82, 0),
-    });
-    world.broadphase = new CANNON.SAPBroadphase(world);
-    world.defaultContactMaterial.friction = 0.6;
+    // ───────────────────────────────────────────────
+// Cannon-es 월드
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0)
+});
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.defaultContactMaterial.friction = 0.6;
 
-    // 지면 생성
-    const groundBody = new CANNON.Body({ mass: 0 });
-    groundBody.addShape(new CANNON.Plane());
-    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-    world.addBody(groundBody);
+// ── 물리용 “평면 지면” (차는 여기랑 부딪힘)
+const groundBody = new CANNON.Body({ mass: 0 });
+groundBody.addShape(new CANNON.Plane());
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+world.addBody(groundBody);
 
-    // 바닥 텍스처 로딩 및 적용
-const trackTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/texture/racetrack.jpg');
-trackTexture.wrapS = THREE.RepeatWrapping;
-trackTexture.wrapT = THREE.RepeatWrapping;
-trackTexture.repeat.set(20, 20); // 텍스처 반복 횟수 조정
+// ── 바닥 텍스처 Plane(2000×2000) – 단순 시각용
+const trackTex = new THREE.TextureLoader().load(
+  'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/texture/racetrack.jpg'
+);
+trackTex.wrapS = trackTex.wrapT = THREE.RepeatWrapping;
+trackTex.repeat.set(20, 20);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-scene.add(ambientLight);
-
-const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-sunLight.position.set(50, 100, 50);
-scene.add(sunLight);
 const groundMesh = new THREE.Mesh(
   new THREE.PlaneGeometry(2000, 2000),
-  new THREE.MeshStandardMaterial({ map: trackTexture })
+  new THREE.MeshStandardMaterial({ map: trackTex })
 );
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
-    groundMesh.rotation.x = -Math.PI / 2;
-    scene.add(groundMesh);
 
-    // 트랙 울퉁불퉁 곡선 & 언덕 배리어
-    function createBarrier(x, y, z, rot) {
-      const sizeX = 2, sizeY = 2, sizeZ = 1;
-      const shape = new CANNON.Box(new CANNON.Vec3(sizeX / 2, sizeY / 2, sizeZ / 2));
-      const body = new CANNON.Body({ mass: 0, shape });
-      body.position.set(x, y + sizeY / 2, z);
-      body.quaternion.setFromEuler(0, rot, 0);
-      world.addBody(body);
+// ── 조명 (써킷 햇빛 느낌)
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(50, 100, 50);
+scene.add(sun);
 
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(sizeX, sizeY, sizeZ),
-        new THREE.MeshStandardMaterial({ color: 0x884400 })
-      );
-      mesh.position.copy(body.position);
-      mesh.quaternion.copy(body.quaternion);
-      scene.add(mesh);
-    }
-
-    const trackRadius = 80, trackSegments = 72;
-    // 경주 트랙 경로 (도넛 모양 곡선)
+// ───────────────────────────────────────────────
+// 시각 전용 “원형 튜브 트랙” (물리 충돌 X)
+const trackRadius = 80;   // ← 한 번만 선언
+const seg = 100;
 const curve = new THREE.CurvePath();
-const trackRadius = 80;
-const segments = 100;
-for (let i = 0; i <= segments; i++) {
-  const angle = (i / segments) * Math.PI * 2;
-  const x = Math.cos(angle) * trackRadius;
-  const z = Math.sin(angle) * trackRadius;
-  const y = Math.sin(i * 0.2) * 1.5; // 약간의 언덕 효과
+for (let i = 0; i <= seg; i++) {
+  const a  = (i / seg) * Math.PI * 2;
+  const a2 = ((i - 1) / seg) * Math.PI * 2;
+
   curve.add(new THREE.LineCurve3(
-    new THREE.Vector3(
-      Math.cos((i - 1) / segments * Math.PI * 2) * trackRadius,
-      Math.sin((i - 1) * 0.2) * 1.5,
-      Math.sin((i - 1) / segments * Math.PI * 2) * trackRadius
-    ),
-    new THREE.Vector3(x, y, z)
+    new THREE.Vector3(Math.cos(a2) * trackRadius, Math.sin((i - 1) * 0.2) * 1.5, Math.sin(a2) * trackRadius),
+    new THREE.Vector3(Math.cos(a)  * trackRadius, Math.sin(i         * 0.2) * 1.5, Math.sin(a)  * trackRadius)
   ));
 }
 
-// 트랙 지오메트리와 재질
-const roadGeo = new THREE.TubeGeometry(curve, 200, 2, 20, true);
-const roadTexture = new THREE.TextureLoader().load('https://threejsfundamentals.org/threejs/resources/images/road.jpg');
-roadTexture.wrapS = roadTexture.wrapT = THREE.RepeatWrapping;
-roadTexture.repeat.set(10, 1);
+const roadGeo = new THREE.TubeGeometry(curve, 400, 2, 20, true);
+const roadTex = new THREE.TextureLoader().load(
+  'https://threejsfundamentals.org/threejs/resources/images/road.jpg'
+);
+roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
+roadTex.repeat.set(40, 1);
 
-const roadMat = new THREE.MeshStandardMaterial({
-  map: roadTexture,
-  side: THREE.DoubleSide
-});
+const roadMat  = new THREE.MeshStandardMaterial({ map: roadTex, side: THREE.DoubleSide });
 const roadMesh = new THREE.Mesh(roadGeo, roadMat);
 scene.add(roadMesh);
-    chassisBody.position.set(trackRadius, 2, 0); // 도로 위로 시작
+
+// ── 자동차 시작 높이(평면 바로 위)
+chassisBody.position.set(trackRadius, 2, 0);
 
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
