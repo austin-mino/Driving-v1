@@ -150,7 +150,7 @@ world.addBody(groundBody);
 const trackA = 500;  // x 방향 반지름
 const trackB = 60;   // z 방향 반지름
 const trackWidth = 60;
-const numSegments = 400; // 트랙 구성 정밀도
+const numSegments = 450; // 트랙 구성 정밀도
 
 // 4. 바리어 생성
 const barrierHeight = 1;
@@ -445,13 +445,13 @@ scene.add(mesh);
     function updateVehicleControls() {
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
-        steeringValue = Math.min(steeringValue - 0.015, maxSteerVal);
+        steeringValue = Math.min(steeringValue - 0.018, maxSteerVal);
       } else if (input.right) {
-        steeringValue = Math.max(steeringValue + 0.015, -maxSteerVal);
+        steeringValue = Math.max(steeringValue + 0.018, -maxSteerVal);
       } else {
         // 중립으로 점진 복귀
-        if (steeringValue > 0) steeringValue = Math.max(steeringValue -1000000, 0);
-        else if (steeringValue < 0) steeringValue = Math.min(steeringValue +1000000, 0);
+        if (steeringValue > 0) steeringValue = Math.max(steeringValue -100000000, 0);
+        else if (steeringValue < 0) steeringValue = Math.min(steeringValue +100000000, 0);
       }
 
       // 앞바퀴 조향에 적용
