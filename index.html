@@ -135,67 +135,51 @@
     });
 
     // ───────────────────────────────────────────────
-// Cannon-es 월드
+// Cannon-es 월드 생성
 const world = new CANNON.World({
-  gravity: new CANNON.Vec3(0, -9.82, 0)
+  gravity: new CANNON.Vec3(0, -9.82, 0), // 중력 설정
 });
 world.broadphase = new CANNON.SAPBroadphase(world);
 world.defaultContactMaterial.friction = 0.6;
 
-// ── 물리용 “평면 지면” (차는 여기랑 부딪힘)
-const groundBody = new CANNON.Body({ mass: 0 });
+// 바닥 평면 (차가 주행할 바닥)
+const groundBody = new CANNON.Body({ mass: 0 }); // 고정된 물체(mass=0)
 groundBody.addShape(new CANNON.Plane());
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // 평면 수평으로
 world.addBody(groundBody);
 
-// ── 바닥 텍스처 Plane(2000×2000) – 단순 시각용
-const trackTex = new THREE.TextureLoader().load(
-  'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/texture/racetrack.jpg'
-);
-trackTex.wrapS = trackTex.wrapT = THREE.RepeatWrapping;
-trackTex.repeat.set(20, 20);
+// 트랙 경계 바리어 생성 함수
+function createBarrier(x, y, z, rotationY) {
+  const sizeX = 2;
+  const sizeY = 2;
+  const sizeZ = 1;
 
-const groundMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(2000, 2000),
-  new THREE.MeshStandardMaterial({ map: trackTex })
-);
-groundMesh.rotation.x = -Math.PI / 2;
-scene.add(groundMesh);
+  const shape = new CANNON.Box(new CANNON.Vec3(sizeX / 2, sizeY / 2, sizeZ / 2));
+  const body = new CANNON.Body({ mass: 0, shape });
+  body.position.set(x, y + sizeY / 2, z);
+  body.quaternion.setFromEuler(0, rotationY, 0);
+  world.addBody(body);
 
-// ── 조명 (써킷 햇빛 느낌)
-scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-const sun = new THREE.DirectionalLight(0xffffff, 1);
-sun.position.set(50, 100, 50);
-scene.add(sun);
-
-// ───────────────────────────────────────────────
-// 시각 전용 “원형 튜브 트랙” (물리 충돌 X)
-const trackRadius = 80;   // ← 한 번만 선언
-const seg = 100;
-const curve = new THREE.CurvePath();
-for (let i = 0; i <= seg; i++) {
-  const a  = (i / seg) * Math.PI * 2;
-  const a2 = ((i - 1) / seg) * Math.PI * 2;
-
-  curve.add(new THREE.LineCurve3(
-    new THREE.Vector3(Math.cos(a2) * trackRadius, Math.sin((i - 1) * 0.2) * 1.5, Math.sin(a2) * trackRadius),
-    new THREE.Vector3(Math.cos(a)  * trackRadius, Math.sin(i         * 0.2) * 1.5, Math.sin(a)  * trackRadius)
-  ));
+  return body;
 }
 
-const roadGeo = new THREE.TubeGeometry(curve, 400, 2, 20, true);
-const roadTex = new THREE.TextureLoader().load(
-  'https://threejsfundamentals.org/threejs/resources/images/road.jpg'
-);
-roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
-roadTex.repeat.set(40, 1);
+// 원형 트랙 반지름 및 분할 수
+const trackRadius = 80;
+const numBarriers = 72;
 
-const roadMat  = new THREE.MeshStandardMaterial({ map: roadTex, side: THREE.DoubleSide });
-const roadMesh = new THREE.Mesh(roadGeo, roadMat);
-scene.add(roadMesh);
+for (let i = 0; i < numBarriers; i++) {
+  const angle = (i / numBarriers) * Math.PI * 2;
 
-// ── 자동차 시작 높이(평면 바로 위)
-chassisBody.position.set(trackRadius, 2, 0);
+  // 트랙 안쪽 바리어 위치
+  const innerX = Math.cos(angle) * (trackRadius - 5);
+  const innerZ = Math.sin(angle) * (trackRadius - 5);
+  createBarrier(innerX, 0, innerZ, angle);
+
+  // 트랙 바깥쪽 바리어 위치
+  const outerX = Math.cos(angle) * (trackRadius + 5);
+  const outerZ = Math.sin(angle) * (trackRadius + 5);
+  createBarrier(outerX, 0, outerZ, angle);
+}
 
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
