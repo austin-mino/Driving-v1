@@ -118,27 +118,21 @@
     window.addEventListener('orientationchange', checkOrientation);
     checkOrientation();
 
-      // Three.js 기본 설정
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x222222);
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(0, 5, 15);
-    camera.lookAt(0, 0, 0); 
+    // Three.js 기본 설정
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(0, 5, 15);
+    camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-    function updateCamera() {
-  const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
-  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
-  camera.position.lerp(cameraOffset, 0.1);
-  camera.lookAt(carMesh.position);
-    }
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
     // Cannon-es 월드 생성
     const world = new CANNON.World({
@@ -402,120 +396,124 @@
       gearState = gear;
       updateGearDisplay();
     }
+    setGear('P'); // 초기 기어 P로 설정
 
-    gearButtons.forEach(button => {
-      button.addEventListener('click', () => setGear(button.textContent));
-    });
-
-    // 차량 조향, 가속, 브레이크 처리
-    function updateVehicleControls() {
-      // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
-      if (input.left) {
-        steeringValue = Math.min(steeringValue + 0.02, maxSteerVal);
-      } else if (input.right) {
-        steeringValue = Math.max(steeringValue - 0.02, -maxSteerVal);
-      } else {
-        // 중립으로 점진 복귀
-        if (steeringValue > 0) steeringValue = Math.max(steeringValue - 0.04, 0);
-        else if (steeringValue < 0) steeringValue = Math.min(steeringValue + 0.04, 0);
-      }
-
-      // 앞바퀴 조향에 적용
-      vehicle.setSteeringValue(steeringValue, 0);
-      vehicle.setSteeringValue(steeringValue, 1);
-
-      // 엔진 힘 초기화
-      engineForce = 0;
-
-      // 기어별 힘 전달
-      if (gearState === 'D') {
-        if (input.accel) engineForce = maxEngineForce;
-        if (input.brake) applyBrake(maxBrakeForce);
-        else applyBrake(0);
-      } else if (gearState === 'R') {
-        if (input.accel) engineForce = -maxEngineForce * 0.6; // 후진은 힘 약간 줄임
-        if (input.brake) applyBrake(maxBrakeForce);
-        else applyBrake(0);
-      } else if (gearState === 'N') {
-        applyBrake(input.brake ? maxBrakeForce : 0);
-        engineForce = 0;
-      } else if (gearState === 'P') {
-        applyBrake(maxBrakeForce * 1.5); // 주차브레이크 강하게
-        engineForce = 0;
-      }
-
-      // 엔진 힘 앞바퀴에 적용 (후륜 구동 가정)
-      vehicle.applyEngineForce(engineForce, 2);
-      vehicle.applyEngineForce(engineForce, 3);
-    }
-
-    // 속도 측정 (m/s -> km/h)
-    function getSpeedKmH() {
-      const velocity = chassisBody.velocity;
-      return velocity.length() * 3.6;
-    }
-
-     // 카메라 부드럽게 차량 뒤 따라가기
-      const relativeCameraOffset = new THREE.Vector3(0, 5, 15);
-      const cameraOffset = relativeCameraOffset.applyQuaternion(carMesh.quaternion).add(carMesh.position);
-      camera.position.lerp(cameraOffset, 0.1);
-      camera.lookAt(carMesh.position); 
-
-      renderer.render(scene, camera);
-    }
-
-    // 타이머 관리
+    // 타이머 관련
     let startTime = null;
     let elapsedTime = 0;
 
-    function startTimer() {
-      startTime = performance.now();
+    // 카메라 뒤 따라가기 함수 (자동차 뒤에서 바라보는 시점)
+    function updateCamera() {
+      // 자동차 위치와 방향
+      const chassisPos = chassisBody.position;
+      const chassisQuat = chassisBody.quaternion;
+
+      // 자동차 진행 방향 (forward vector)
+      const forward = new THREE.Vector3(0, 0, 1);
+      forward.applyQuaternion(new THREE.Quaternion(chassisQuat.x, chassisQuat.y, chassisQuat.z, chassisQuat.w));
+      forward.normalize();
+
+      // 카메라 목표 위치 = 자동차 뒤쪽으로 8m, 위로 4m 띄우기
+      const cameraTarget = new THREE.Vector3(chassisPos.x, chassisPos.y + 1.5, chassisPos.z);
+      const cameraPos = cameraTarget.clone().addScaledVector(forward, -8);
+      cameraPos.y += 4;
+
+      // 부드럽게 이동 (LERP)
+      camera.position.lerp(cameraPos, 0.1);
+      camera.lookAt(cameraTarget);
     }
 
-    function updateTimer() {
-      if (startTime === null) return;
-      elapsedTime = (performance.now() - startTime) / 1000;
-      timerDisplay.textContent = `타이머: ${elapsedTime.toFixed(2)} s`;
-    }
-
-    // 애니메이션 및 물리 루프
-    const clock = new THREE.Clock();
-
-    function animate() {
+    // 애니메이션 루프 및 물리 업데이트
+    let lastTime;
+    function animate(time) {
       requestAnimationFrame(animate);
 
-      const delta = clock.getDelta();
+      if (!lastTime) lastTime = time;
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
 
-      updateVehicleControls();
+      // 물리 업데이트 (고정 시간 간격으로 안정성 유지)
+      const fixedTimeStep = 1.0 / 60.0;
+      const maxSubSteps = 3;
+      world.step(fixedTimeStep, dt, maxSubSteps);
 
-      world.step(1/60, delta, 3);
+      // 조향 처리
+      if (input.left) {
+        steeringValue = Math.min(steeringValue + 0.05, maxSteerVal);
+      } else if (input.right) {
+        steeringValue = Math.max(steeringValue - 0.05, -maxSteerVal);
+      } else {
+        // 스티어링 중립 복귀
+        if (steeringValue > 0.01) steeringValue -= 0.05;
+        else if (steeringValue < -0.01) steeringValue += 0.05;
+        else steeringValue = 0;
+      }
+      vehicle.setSteeringValue(steeringValue, 0);
+      vehicle.setSteeringValue(steeringValue, 1);
 
-      // 차량 위치/회전 mesh에 반영
-      carMesh.position.copy(chassisBody.position);
-      carMesh.quaternion.copy(chassisBody.quaternion);
+      // 가속 및 브레이크 처리
+      engineForce = 0;
+      applyBrake(0);
 
-      // 휠 mesh 위치/회전 업데이트
-      for (let i = 0; i < vehicle.wheelInfos.length; i++) {
+      if (gearState === 'D') {
+        if (input.accel) engineForce = maxEngineForce;
+        if (input.brake) applyBrake(maxBrakeForce);
+      } else if (gearState === 'R') {
+        if (input.accel) engineForce = -maxEngineForce;
+        if (input.brake) applyBrake(maxBrakeForce);
+      } else if (gearState === 'N') {
+        // 중립 상태, 엔진 힘 없음
+        if (input.brake) applyBrake(maxBrakeForce);
+      } else if (gearState === 'P') {
+        // 주차 상태, 강한 브레이크
+        applyBrake(maxBrakeForce * 5);
+      }
+
+      vehicle.applyEngineForce(engineForce, 2);
+      vehicle.applyEngineForce(engineForce, 3);
+
+      // 휠 위치와 회전 동기화
+      for(let i=0; i < vehicle.wheelInfos.length; i++) {
         vehicle.updateWheelTransform(i);
         const t = vehicle.wheelInfos[i].worldTransform;
+
+        // Cannon.js 변환값을 Three.js로 변환
         wheelHolders[i].position.copy(t.position);
         wheelHolders[i].quaternion.copy(t.quaternion);
       }
 
-      // 속도 UI 업데이트
-      hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
+      // 자동차 메시와 물리 바디 위치 동기화
+      carMesh.position.copy(chassisBody.position);
+      carMesh.quaternion.copy(chassisBody.quaternion);
 
-      // 카메라 따라가기
+      // 카메라 업데이트
       updateCamera();
 
+      // 속도 계산 (m/s -> km/h)
+      const velocity = chassisBody.velocity.length();
+      const speedKmh = Math.round(velocity * 3.6);
+      hud.textContent = `속도: ${speedKmh} km/h`;
+
       // 타이머 업데이트
-      updateTimer();
+      if (gearState === 'D' || gearState === 'R') {
+        if (startTime === null) startTime = time;
+        elapsedTime = (time - startTime) / 1000;
+      } else {
+        startTime = null;
+      }
+      timerDisplay.textContent = `타이머: ${elapsedTime.toFixed(2)} s`;
 
       renderer.render(scene, camera);
     }
 
-    startTimer();
-    updateGearDisplay();
+    // 기어 버튼 이벤트
+    gearButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setGear(btn.textContent);
+      });
+    });
+
+    setGear('P');
     animate();
   </script>
 </body>
