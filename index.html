@@ -446,9 +446,9 @@ scene.add(mesh);
       steeringValue=0;
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
-  steeringValue = maxSteerVal;
-} else if (input.right) {
   steeringValue = -maxSteerVal;
+} else if (input.right) {
+  steeringValue = maxSteerVal;
 }
 
       // 앞바퀴 조향에 적용
