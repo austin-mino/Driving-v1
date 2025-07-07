@@ -422,7 +422,7 @@ scene.add(mesh);
 
     // 기어 상태와 UI 업데이트 함수
     const maxEngineForce = 1200;
-    const maxBrakeForce = 300;
+    const maxBrakeForce = 100;
     const maxSteerVal = Math.PI / 8;
     let engineForce = 0;
     let steeringValue = 0;
@@ -445,13 +445,13 @@ scene.add(mesh);
     function updateVehicleControls() {
       // 조향: 좌우 키 또는 버튼에 따라 steeringValue 조절
       if (input.left) {
-        steeringValue = Math.min(steeringValue - 0.01, maxSteerVal);
+        steeringValue = Math.min(steeringValue - 0.015, maxSteerVal);
       } else if (input.right) {
-        steeringValue = Math.max(steeringValue + 0.01, -maxSteerVal);
+        steeringValue = Math.max(steeringValue + 0.015, -maxSteerVal);
       } else {
         // 중립으로 점진 복귀
-        if (steeringValue > 0) steeringValue = Math.max(steeringValue - 0.09, 0);
-        else if (steeringValue < 0) steeringValue = Math.min(steeringValue + 0.09, 0);
+        if (steeringValue > 0) steeringValue = Math.max(steeringValue - 0.2, 0);
+        else if (steeringValue < 0) steeringValue = Math.min(steeringValue + 0.2, 0);
       }
 
       // 앞바퀴 조향에 적용
