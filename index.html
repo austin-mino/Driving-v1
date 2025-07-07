@@ -133,23 +133,6 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-    const trackShape = new THREE.Shape();
-for (let i = 0; i <= numSegments; i++) {
-  const angle = (i / numSegments) * 2 * Math.PI;
-  const x = trackA * Math.cos(angle);
-  const z = trackB * Math.sin(angle);
-  if (i === 0) {
-    trackShape.moveTo(x, z);
-  } else {
-    trackShape.lineTo(x, z);
-  }
-}
-const extrudeSettings = { depth: trackWidth, bevelEnabled: false };
-const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
-const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
-const mesh = new THREE.Mesh(geometry, material);
-mesh.rotation.x = -Math.PI / 2;
-scene.add(mesh);
 
     // ───────────────────────────────────────────────
 // Cannon-es 월드 생성
@@ -219,6 +202,23 @@ for (let i = 0; i < numSegments; i++) {
     barrierMeshes.push(barrierMesh);
   });
 }
+    const trackShape = new THREE.Shape();
+for (let i = 0; i <= numSegments; i++) {
+  const angle = (i / numSegments) * 2 * Math.PI;
+  const x = trackA * Math.cos(angle);
+  const z = trackB * Math.sin(angle);
+  if (i === 0) {
+    trackShape.moveTo(x, z);
+  } else {
+    trackShape.lineTo(x, z);
+  }
+}
+const extrudeSettings = { depth: trackWidth, bevelEnabled: false };
+const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
+const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
+const mesh = new THREE.Mesh(geometry, material);
+mesh.rotation.x = -Math.PI / 2;
+scene.add(mesh);
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
     const chassisBody = new CANNON.Body({ mass: 110 });
