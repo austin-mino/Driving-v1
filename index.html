@@ -212,7 +212,7 @@ for (let i = 0; i <= numSegments; i++) {
     trackShape.lineTo(x, z);
   }
 }
-const extrudeSettings = { depth: trackWidth, bevelEnabled: false };
+const extrudeSettings = { depth:0.1, bevelEnabled: false };
 const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
 const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
