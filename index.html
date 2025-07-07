@@ -486,7 +486,8 @@ if (input.left) {
       // 앞바퀴 조향에 적용
       vehicle.setSteeringValue(steeringValue, 0);
       vehicle.setSteeringValue(steeringValue, 1);
-
+      vehicle.setSteeringValue(0, 2); // 뒷왼쪽 바퀴 → 조향 없음
+      vehicle.setSteeringValue(0, 3); // 뒷오른쪽 바퀴 → 조향 없음
       // 엔진 힘 초기화
       engineForce = 0;
 
