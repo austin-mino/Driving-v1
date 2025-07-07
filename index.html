@@ -160,54 +160,70 @@ trackBody.position.set(0, 0, 0);
 trackBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(trackBody);
 
-// 4. 트랙 곡선 (원형) 따라 바리어(장애물) 배치
+// 4. 트랙 곡선 (원형) 따라 바리어(장애물) 배치 및 시각 메시 생성
 const trackRadius = 80;
 const barrierHeight = 2;
 const barrierThickness = 1;
 const barrierLength = 4; // 한 개 바리어 길이 (도로 바깥쪽을 향해 길게)
-
 const numBarriers = 72;
+
+const barrierMeshes = [];  // 메시 저장용 배열
 
 for (let i = 0; i < numBarriers; i++) {
   const angle = (i / numBarriers) * 2 * Math.PI;
 
-  // 바리어 위치는 트랙 반지름 ± (트랙 폭 / 2) 위치 (길 양쪽)
-  const offset = trackWidth / 2;
+  // 바리어 박스 물리 형태
+  const barrierShape = new CANNON.Box(new CANNON.Vec3(barrierLength / 2, barrierHeight / 2, barrierThickness / 2));
 
   // 왼쪽 바리어
   {
-    const x = Math.cos(angle) * (trackRadius - offset);
-    const z = Math.sin(angle) * (trackRadius - offset);
-    const barrierShape = new CANNON.Box(new CANNON.Vec3(barrierLength / 2, barrierHeight / 2, barrierThickness / 2));
+    const x = Math.cos(angle) * (trackRadius - trackWidth / 2);
+    const z = Math.sin(angle) * (trackRadius - trackWidth / 2);
+
     const barrierBody = new CANNON.Body({ mass: 0 });
     barrierBody.addShape(barrierShape);
-
-    // 위치
     barrierBody.position.set(x, barrierHeight / 2, z);
-
-    // 회전 - 바리어가 도로를 따라 원을 감싸도록
     barrierBody.quaternion.setFromEuler(0, -angle, 0);
-
     world.addBody(barrierBody);
+
+    // Three.js 메시 생성 (흰색)
+    const barrierGeom = new THREE.BoxGeometry(barrierLength, barrierHeight, barrierThickness);
+    const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const barrierMesh = new THREE.Mesh(barrierGeom, barrierMat);
+    barrierMesh.position.copy(barrierBody.position);
+    barrierMesh.quaternion.copy(barrierBody.quaternion);
+    scene.add(barrierMesh);
+
+    barrierMeshes.push(barrierMesh);
   }
 
   // 오른쪽 바리어
   {
-    const x = Math.cos(angle) * (trackRadius + offset);
-    const z = Math.sin(angle) * (trackRadius + offset);
-    const barrierShape = new CANNON.Box(new CANNON.Vec3(barrierLength / 2, barrierHeight / 2, barrierThickness / 2));
+    const x = Math.cos(angle) * (trackRadius + trackWidth / 2);
+    const z = Math.sin(angle) * (trackRadius + trackWidth / 2);
+
     const barrierBody = new CANNON.Body({ mass: 0 });
     barrierBody.addShape(barrierShape);
-
-    // 위치
     barrierBody.position.set(x, barrierHeight / 2, z);
-
-    // 회전 - 바리어가 도로를 따라 원을 감싸도록
     barrierBody.quaternion.setFromEuler(0, -angle, 0);
-
     world.addBody(barrierBody);
+
+    // Three.js 메시 생성 (흰색)
+    const barrierGeom = new THREE.BoxGeometry(barrierLength, barrierHeight, barrierThickness);
+    const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const barrierMesh = new THREE.Mesh(barrierGeom, barrierMat);
+    barrierMesh.position.copy(barrierBody.position);
+    barrierMesh.quaternion.copy(barrierBody.quaternion);
+    scene.add(barrierMesh);
+
+    barrierMeshes.push(barrierMesh);
   }
 }
+
+
+
+
+  
 
     // 자동차 차체 물리 (박스)
     const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
