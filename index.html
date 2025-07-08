@@ -172,10 +172,6 @@ let yaw = 0;
 let pitch = 0.15; // 약간 위를 보는 초기값
 const sensitivity = 0.005;
 
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
