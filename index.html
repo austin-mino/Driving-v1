@@ -305,7 +305,7 @@ function createGrandeurIGCarDetailed() {
   trunkShape.lineTo(-2.1, 0);
   const trunkGeo = new THREE.ExtrudeGeometry(trunkShape, { depth: 2.4, bevelEnabled: false });
   trunkGeo.rotateX(Math.PI / 2);
-  trunkGeo.translate(0, 0.8, 6.9);  // 수정: 6.0 → 6.9
+  trunkGeo.translate(0, 2, 6);  // 수정: 6.0 → 6.9
   g.add(new THREE.Mesh(trunkGeo, paint));
 
   // --- 슬림 헤드라이트 라인 ---
@@ -395,7 +395,7 @@ function createGrandeurIGCarDetailed() {
     const rimMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1.0, roughness: 0.3 });
     const rimGeo = new THREE.TorusGeometry(0.5, 0.15, 16, 100);
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.rotation.x = Math.PI / 2;  // 수정: rotation.z → rotation.x
+    rimMesh.rotation.z = Math.PI / 2;  // 수정: rotation.z → rotation.x
 
     wheelGroup.add(rimMesh);
 
