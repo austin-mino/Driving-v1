@@ -188,10 +188,6 @@ const sensitivity = 0.005;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-document.getElementById('btnReset').addEventListener('click', resetCar);
-window.addEventListener('keydown', e => {
-  if (e.key.toLowerCase() === 'r') resetCar();
-});
 
 function resetCar() {
   // 위치는 그대로, 높이 약간 위로
@@ -747,6 +743,12 @@ if (input.left) {
 
       renderer.render(scene, camera);
     }
+
+document.getElementById('btnReset').addEventListener('click', resetCar);
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'r') resetCar();
+});
+
 
     startTimer();
     updateGearDisplay();
