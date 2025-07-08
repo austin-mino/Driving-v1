@@ -112,6 +112,47 @@
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
     import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
+    let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let yaw = 0;   // 좌우 회전 (y축)
+let pitch = 0; // 상하 회전 (x축)
+
+const sensitivity = 0.005; // 마우스 감도 조절
+
+renderer.domElement.addEventListener('mousedown', (event) => {
+  if (event.button === 0) { // 좌클릭
+    isDragging = true;
+    previousMousePosition.x = event.clientX;
+    previousMousePosition.y = event.clientY;
+  }
+});
+
+renderer.domElement.addEventListener('mouseup', (event) => {
+  if (event.button === 0) {
+    isDragging = false;
+  }
+});
+
+renderer.domElement.addEventListener('mousemove', (event) => {
+  if (!isDragging) return;
+
+  const deltaMove = {
+    x: event.clientX - previousMousePosition.x,
+    y: event.clientY - previousMousePosition.y
+  };
+
+  yaw -= deltaMove.x * sensitivity;
+  pitch -= deltaMove.y * sensitivity;
+
+  // pitch 제한 (상하 회전 범위 제한)
+  const pitchLimit = Math.PI / 3; // 약 60도 위아래 제한
+  pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
+
+  previousMousePosition.x = event.clientX;
+  previousMousePosition.y = event.clientY;
+});
+
+
     // 가로모드 체크
     const rotateWarning = document.getElementById('rotateWarning');
     function checkOrientation() {
@@ -281,7 +322,7 @@ function createGrandeurIGCarDetailed() {
   const bodyGeo = new THREE.ExtrudeGeometry(sideShape, { depth: 13.8, bevelEnabled: false });
   g.rotation.x = Math.PI / 2;
   g.position.y = 0.5;
-  bodyGeo.translate(0, 0.6, 0);
+  bodyGeo.translate(6, 0.6, 0);
   g.add(new THREE.Mesh(bodyGeo, paint));
 
   // --- 보닛 상단 곡면 ---
@@ -293,7 +334,7 @@ function createGrandeurIGCarDetailed() {
   hoodShape.lineTo(-2.2, 0);
   const hoodGeo = new THREE.ExtrudeGeometry(hoodShape, { depth: 2.7, bevelEnabled: false });
   hoodGeo.rotateX(Math.PI / 2);
-  hoodGeo.translate(0, 0.9, 0);
+  hoodGeo.translate(6, 0.9, 0);
   g.add(new THREE.Mesh(hoodGeo, paint));
 
   // --- 트렁크 곡면 ---
