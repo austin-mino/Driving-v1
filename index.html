@@ -326,10 +326,10 @@ loader.load('scene.gltf', gltf => {
     });
 
     // 조명 강화
-    scene.add(new THREE.AmbientLight(0xffffff, 1));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(10, 20, 10);
-    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 2));
+    const light = new THREE.DirectionalLight(0xffffff, 3);
+    light.position.set(20, 30, 20);
+    scene.add(light);
 
     // 입력 상태
     const input = { left: false, right: false, accel: false, brake: false };
