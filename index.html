@@ -379,17 +379,23 @@ function createGrandeurIGCarDetailed() {
   br.position.set(0, 0.25, 7.33);
   g.add(bf, br);
     
-    // 휠림
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1.0, roughness: 0.3 });
-    const rimGeo = new THREE.TorusGeometry(0.5, 0.15, 16, 100);
-    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.rotation.z = Math.PI / 2;  
+    function createWheel() {
+  const wheelGroup = new THREE.Group();
 
-    wheelGroup.add(rimMesh);
+  const tireGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 24);
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
+  const tireMesh = new THREE.Mesh(tireGeo, tireMat);
+  tireMesh.rotation.z = Math.PI / 2;
+  wheelGroup.add(tireMesh);
 
-    return wheelGroup;
-  }
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1.0, roughness: 0.3 });
+  const rimGeo = new THREE.TorusGeometry(0.5, 0.15, 16, 100);
+  const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+  rimMesh.rotation.z = Math.PI / 2;
+  wheelGroup.add(rimMesh);
 
+  return wheelGroup;
+}
   // --- 휠 4개 배치 ---
   const wheelPositions = [
     [-2.3, -5], // 왼쪽 앞
