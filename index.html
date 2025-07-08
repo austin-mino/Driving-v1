@@ -185,16 +185,14 @@ let yaw = 0;
 let pitch = 0.15; // 약간 위를 보는 초기값
 const sensitivity = 0.005;
 
-    // 맨 위쪽, yaw, pitch, isDragging 선언부 아래쯤에
-let cameraFollow = true; // true: 차량 뒤따라가기, false: 자유 시점
+  let cameraFollow = true; // 차량 뒤따라가기 모드
 
-// 버튼 선택 및 이벤트 등록
-const btnCamToggle = document.getElementById('btnCamToggle');
+btnCamToggle.textContent = cameraFollow ? '뒤따라가기' : '자유 시점';
+
 btnCamToggle.addEventListener('click', () => {
   cameraFollow = !cameraFollow;
-  btnCamToggle.textContent = cameraFollow ? '자유 시점' : '뒤따라가기';
+  btnCamToggle.textContent = cameraFollow ? '뒤따라가기' : '자유 시점';
 });
-btnCamToggle.textContent = '자유 시점'; // 초기 텍스트 (현재는 follow 상태이므로 토글 누르면 자유 시점)
 
 // updateCamera 함수 수정
 function updateCamera() {
