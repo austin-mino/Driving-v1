@@ -187,18 +187,19 @@ const sensitivity = 0.005;
 
   let cameraFollow = true; // 차량 뒤따라가기 모드
 
-btnCamToggle.textContent = cameraFollow ? '뒤따라가기' : '자유 시점';
+btnCamToggle.textContent = cameraFollow ? '뒤따라가기 모드' : '자유 시점 모드';
 
 btnCamToggle.addEventListener('click', () => {
   cameraFollow = !cameraFollow;
-  btnCamToggle.textContent = cameraFollow ? '자유 시점' : '뒤따라가기';
+  btnCamToggle.textContent = cameraFollow ? '뒤따라가기 모드' : '자유 시점 모드';
 
-  // 자유 시점으로 전환할 때 yaw, pitch를 적절히 초기화해주면 좋음
+  // 자유 시점으로 전환할 때 yaw, pitch 초기화
   if (!cameraFollow) {
-    yaw = 0;
+    yaw = 0
     pitch = 0.15;
   }
 });
+
 
 // updateCamera 함수 수정
 function updateCamera() {
@@ -586,6 +587,8 @@ function createGrandeurIGCarDetailed() {
           gearButtons = [...document.querySelectorAll('#gearControls button')],
           hud = document.getElementById('hud'),
           timerDisplay = document.getElementById('timerDisplay');
+    
+    const btnCamToggle = document.getElementById('btnCamToggle');
 
     // 초기 기어 상태
     let gearState = 'P';
