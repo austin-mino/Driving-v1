@@ -134,7 +134,7 @@ renderer.domElement.addEventListener('mouseup', (event) => {
   }
 });
 renderer.domElement.addEventListener('mousemove', (event) => {
-  if (!isDragging) return;
+  if (!isFreeCamera || !isDragging) return;
 
   // followCamera가 true면 뒤 따라가기 모드이므로 마우스 움직임 무시
   if (followCamera) return;
@@ -187,6 +187,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let yaw = 0;
+let isFreeCamera = false;
 let pitch = 0.15; // 약간 위를 보는 초기값
 const sensitivity = 0.005;
 
@@ -572,6 +573,7 @@ cameraToggleBtn.addEventListener('click', () => {
         case '2': setGear('R'); break;
         case '3': setGear('N'); break;
         case '4': setGear('D'); break;
+        case 'c': isFreeCamera = !isFreeCamera; break;
       }
     });
 
@@ -683,33 +685,21 @@ if (input.left) {
     }
 
     // 카메라 차량 뒤쪽 위치로 고정
-    function updateCamera() {
-  if (followCamera) {
-    // 차량 뒤 따라가기 모드
-    const carPos = carModel.position.clone();
-    const carDir = new THREE.Vector3(0, 0, 1).applyQuaternion(carModel.quaternion);
+   function updateCamera() {
+  const carPos = chassisBody.position.clone(); // 실제 차량 위치 기준
 
-    const offsetBack = carDir.clone().multiplyScalar(-15);
-    const offsetUp = new THREE.Vector3(0, 5, 0);
-    const camPos = carPos.clone().add(offsetBack).add(offsetUp);
+  if (isFreeCamera) {
+    const radius = 15;
+    const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
+    const offsetY = radius * Math.sin(pitch) + 7;
+    const offsetZ = radius * Math.cos(pitch) * Math.cos(yaw);
 
-    // 부드럽게 이동(lerp)
-    camera.position.lerp(camPos, 0.2);
-
-    // 카메라는 차 앞쪽을 바라봄
-    const lookAtPos = carPos.clone().add(carDir.clone().multiplyScalar(8));
-    camera.lookAt(lookAtPos);
+    camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
+    camera.lookAt(carPos);
   } else {
-    // 자유 마우스 시점 모드
-    const target = carModel.position.clone();
-    const radius = 25;
-
-    const camX = radius * Math.cos(yaw) * Math.cos(pitch);
-    const camY = radius * Math.sin(pitch) + 5;
-    const camZ = radius * Math.sin(yaw) * Math.cos(pitch);
-
-    camera.position.set(target.x + camX, target.y + camY, target.z + camZ);
-    camera.lookAt(target);
+    const offset = new THREE.Vector3(0, 5, -15).applyQuaternion(chassisBody.quaternion);
+    camera.position.copy(chassisBody.position).add(offset);
+    camera.lookAt(chassisBody.position);
   }
 }
 
