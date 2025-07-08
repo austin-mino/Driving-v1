@@ -191,14 +191,25 @@ btnCamToggle.textContent = cameraFollow ? '뒤따라가기' : '자유 시점';
 
 btnCamToggle.addEventListener('click', () => {
   cameraFollow = !cameraFollow;
-  btnCamToggle.textContent = cameraFollow ? '뒤따라가기' : '자유 시점';
+  btnCamToggle.textContent = cameraFollow ? '자유 시점' : '뒤따라가기';
+
+  // 자유 시점으로 전환할 때 yaw, pitch를 적절히 초기화해주면 좋음
+  if (!cameraFollow) {
+    yaw = 0;
+    pitch = 0.15;
+  }
 });
 
 // updateCamera 함수 수정
 function updateCamera() {
   const carPos = carModel.position.clone();
 
+  // pitch 제한
+  const pitchLimit = Math.PI / 3;
+  pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
+
   if (cameraFollow) {
+    // 차량 뒤따라가기 모드
     const radius = 15;
     const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
     const offsetY = radius * Math.sin(pitch) + 7;
@@ -207,6 +218,7 @@ function updateCamera() {
     camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
     camera.lookAt(carPos);
   } else {
+    // 자유 시점 모드 - 차량 기준 좀 더 멀리 떨어짐
     const distance = 20;
     const x = carPos.x + distance * Math.sin(yaw) * Math.cos(pitch);
     const y = carPos.y + distance * Math.sin(pitch) + 5;
