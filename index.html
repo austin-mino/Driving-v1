@@ -686,7 +686,7 @@ if (input.left) {
     camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
     camera.lookAt(carPos);
   } else {
-    const offset = new THREE.Vector3(0, 5, -15).applyQuaternion(chassisBody.quaternion);
+    const offset = new THREE.Vector3(0, 15, 15).applyQuaternion(chassisBody.quaternion);
     camera.position.copy(chassisBody.position).add(offset);
     camera.lookAt(chassisBody.position);
   }
