@@ -97,6 +97,7 @@
     <button id="btnAccel" class="controlBtn">엑셀</button>
     <button id="btnBrake" class="controlBtn">브레이크</button>
   <div id="reset">
+    <!-- 기어 선택 아래에 추가 -->
     <button id="btnReset" class="controlBtn">차량 리셋</button>
   </div>
     <!-- 기어 선택 -->
@@ -108,9 +109,8 @@
   </div>
 
   <script type="module">
-  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
-  import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
     // 가로모드 체크
     const rotateWarning = document.getElementById('rotateWarning');
@@ -125,8 +125,8 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
-    camera.position.set(500, 5, 15);
-    camera.lookAt(500, 0.5, 0);
+    camera.position.set(0, 5, 15);
+    camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -136,6 +136,7 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
+document.getElementById('btnReset').addEventListener('click', resetCar);
 window.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'r') resetCar();
 });
@@ -153,7 +154,7 @@ function resetCar() {
   chassisBody.velocity.set(0, 0, 0);
   chassisBody.angularVelocity.set(0, 0, 0);
 }
-  document.getElementById('btnReset').addEventListener('click', resetCar);
+
 // 쿼터니언에서 y축 회전값 추출
 function getYRotation(q) {
   const siny_cosp = 2 * (q.w * q.y + q.z * q.x);
@@ -243,51 +244,82 @@ const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
 const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
-mesh.position.y = 0;  // ← 이 줄 추가
+mesh.position.y = -trackWidth / 2;  // ← 이 줄 추가
 scene.add(mesh);
-    
-    // 자동차 차체 물리 
-    // 차체 물리
-  const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
-  const chassisBody = new CANNON.Body({ mass: 110 });
-  chassisBody.addShape(chassisShape);
-  chassisBody.position.set(500, 0.5, 0);
-  chassisBody.angularDamping = 0.5;
-  world.addBody(chassisBody);
 
-  // 🚗 GLTF 자동차 모델 로딩 (현대 그랜저 IG)
-  // GLTF 모델 추가 전, 미리 그룹 생성
-let carMesh = new THREE.Group();
-scene.add(carMesh); // 🚨 여기에서 먼저 씬에 넣기
+    // 자동차 차체 물리 (박스)
+    const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
+    const chassisBody = new CANNON.Body({ mass: 110 });
+    chassisBody.addShape(chassisShape);
+    chassisBody.position.set(500, 0.5, 0);
+    chassisBody.angularDamping = 0.5;
+    chassisBody.linearDamping = 0.0;
+    world.addBody(chassisBody);
 
-// 🚗 GLTF 자동차 모델 로딩
-const loader = new GLTFLoader();
-loader.load(
-  './2024_hyundai_elantra_n-1.glb',
-  gltf => {
-    alert('✅ GLB 로딩 성공');
-    const model = gltf.scene;
-    model.scale.set(4, 4, 4);
-    model.position.set(500, 0.5, 0);
-    carMesh.add(model);
+    // 자동차 시각 모델 (둥근 차체)
+    function createRoundedCarBody() {
+      const group = new THREE.Group();
 
-    startTimer();
-    animate();
-  },
-  undefined,
-  error => {
-    alert('GLB 로딩 실패:' + error.message);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.6, roughness: 0.4 });
+      const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
+      mainBody.position.y = 0.6;
+      group.add(mainBody);
 
-    const debugCar = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 1, 6),
-      new THREE.MeshStandardMaterial({ color: 0xff0000 })
-    );
-    carMesh.add(debugCar);
+      const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
+      [[-1.4, 0.6, -2.7], [1.4, 0.6, -2.7], [-1.4, 0.6, 2.7], [1.4, 0.6, 2.7]].forEach(([x,y,z])=>{
+        const s = new THREE.Mesh(sphereGeom, bodyMat);
+        s.position.set(x, y, z);
+        group.add(s);
+      });
 
-    startTimer();
-    animate();
-  }
-);
+      const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(2.5, 0.4, 3),
+        new THREE.MeshStandardMaterial({ color: 0xaa2222, metalness: 0.5, roughness: 0.5 })
+      );
+      roof.position.set(0, 1.3, 0);
+      group.add(roof);
+
+      const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
+      const frontWin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.05), windowMat);
+      frontWin.position.set(0, 1.25, -1.5);
+      group.add(frontWin);
+
+      const rearWin = frontWin.clone();
+      rearWin.position.z = 1.5;
+      group.add(rearWin);
+
+      const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
+      leftWin.position.set(-1.25, 1.25, 0);
+      group.add(leftWin);
+
+      const rightWin = leftWin.clone();
+      rightWin.position.x = 1.25;
+      group.add(rightWin);
+
+      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x990000, metalness: 0.7, roughness: 0.3 });
+      const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
+      fBump.position.set(0, 0.5, -3.1);
+      group.add(fBump);
+
+      const rBump = fBump.clone();
+      rBump.position.z = 3.1;
+      group.add(rBump);
+
+      const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
+      const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), headMat);
+      headLamp.rotation.x = Math.PI / 2;
+      headLamp.position.set(-1.1, 0.8, -3.3);
+      group.add(headLamp);
+
+      const headLampR = headLamp.clone();
+      headLampR.position.x = 1.1;
+      group.add(headLampR);
+
+      return group;
+    }
+
+    const carMesh = createRoundedCarBody();
+    scene.add(carMesh);
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
@@ -299,7 +331,7 @@ loader.load(
 
     // 휠 옵션 - 디자인 및 물리 조정
     const wheelOptions = {
-      radius: 0.48,
+      radius: 0.5,
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 45,
       suspensionRestLength: 0.4,
@@ -342,10 +374,10 @@ loader.load(
     });
 
     // 조명 강화
-    scene.add(new THREE.AmbientLight(0xffffff, 3));
-    const light = new THREE.DirectionalLight(0xffffff, 3);
-    light.position.set(20, 30, 20);
-    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 1));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
 
     // 입력 상태
     const input = { left: false, right: false, accel: false, brake: false };
@@ -435,7 +467,6 @@ loader.load(
     gearButtons.forEach(button => {
       button.addEventListener('click', () => setGear(button.textContent));
     });
-    updateGearDisplay();
 
     // 차량 조향, 가속, 브레이크 처리
     function updateVehicleControls() {
@@ -455,6 +486,7 @@ if (input.left) {
       // 앞바퀴 조향에 적용
       vehicle.setSteeringValue(steeringValue, 0);
       vehicle.setSteeringValue(steeringValue, 1);
+
       vehicle.setSteeringValue(0, 2); // 뒷왼쪽 바퀴 → 조향 없음
       vehicle.setSteeringValue(0, 3); // 뒷오른쪽 바퀴 → 조향 없음
       // 엔진 힘 초기화
@@ -490,10 +522,10 @@ if (input.left) {
 
     // 카메라 차량 뒤쪽 위치로 고정
     function updateCamera() {
-    const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
-    camera.position.lerp(cameraOffset, 0.1);
-    camera.lookAt(carMesh.position);
+  const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
+  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
+  camera.position.lerp(cameraOffset, 0.1);
+  camera.lookAt(carMesh.position);
     }
 
     // 타이머 관리
@@ -511,30 +543,44 @@ if (input.left) {
     }
 
     // 애니메이션 및 물리 루프
-  const clock = new THREE.Clock();
+    const clock = new THREE.Clock();
+
     function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
+      requestAnimationFrame(animate);
 
-  updateVehicleControls();
-  world.step(1 / 60, delta, 3);
+      const delta = clock.getDelta();
 
-  // 차량 위치·회전 반영
-  carMesh.position.copy(chassisBody.position);
-  carMesh.quaternion.copy(chassisBody.quaternion);
+      updateVehicleControls();
 
-  for (let i = 0; i < vehicle.wheelInfos.length; i++) {
-    vehicle.updateWheelTransform(i);
-    const t = vehicle.wheelInfos[i].worldTransform;
-    wheelHolders[i].position.copy(t.position);
-    wheelHolders[i].quaternion.copy(t.quaternion);
-  }
+      world.step(1/60, delta, 3);
 
-  hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
-  updateCamera();
-  updateTimer();
-  renderer.render(scene, camera);
+      // 차량 위치/회전 mesh에 반영
+      carMesh.position.copy(chassisBody.position);
+      carMesh.quaternion.copy(chassisBody.quaternion);
+
+      // 휠 mesh 위치/회전 업데이트
+      for (let i = 0; i < vehicle.wheelInfos.length; i++) {
+        vehicle.updateWheelTransform(i);
+        const t = vehicle.wheelInfos[i].worldTransform;
+        wheelHolders[i].position.copy(t.position);
+        wheelHolders[i].quaternion.copy(t.quaternion);
+      }
+
+      // 속도 UI 업데이트
+      hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
+
+      // 카메라 따라가기
+      updateCamera();
+
+      // 타이머 업데이트
+      updateTimer();
+
+      renderer.render(scene, camera);
     }
+
+    startTimer();
+    updateGearDisplay();
+    animate();
   </script>
-  </body>
+</body>
 </html>
