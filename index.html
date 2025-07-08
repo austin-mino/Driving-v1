@@ -330,7 +330,7 @@ function createGrandeurIGCarDetailed() {
   const bodyGeo = new THREE.ExtrudeGeometry(sideShape, { depth: 13.8, bevelEnabled: false });
   g.rotation.x = Math.PI / 2;
   g.position.y = 0.5;
-  g.position.z = -28;
+  g.position.z = 0;
   bodyGeo.translate(0, 0.6, 0);
   g.add(new THREE.Mesh(bodyGeo, paint));
 
