@@ -265,25 +265,25 @@ const loader = new GLTFLoader();
 loader.load(
   './2024_hyundai_elantra_n-1.glb',
   gltf => {
+    alert('✅ GLB 로딩 성공');
     const model = gltf.scene;
     model.scale.set(4, 4, 4);
     model.position.set(500, 0.5, 0);
     carMesh.add(model);
 
     startTimer();
-    animate();  // 정상적일 때만 호출됨
+    animate();
   },
   undefined,
   error => {
-    alert('GLB 로딩 실패:'+error.message);
-    
-    // 디버깅용 박스 자동차로 대체 후 애니메이션 실행
+    alert('GLB 로딩 실패:' + error.message);
+
     const debugCar = new THREE.Mesh(
       new THREE.BoxGeometry(3, 1, 6),
       new THREE.MeshStandardMaterial({ color: 0xff0000 })
     );
     carMesh.add(debugCar);
-    
+
     startTimer();
     animate();
   }
