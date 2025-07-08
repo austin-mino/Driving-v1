@@ -260,7 +260,7 @@ scene.add(mesh);
   // 🚗 GLTF 자동차 모델 로딩 (현대 그랜저 IG)
   const loader = new GLTFLoader();
   let carMesh = new THREE.Group(); // 기본값
-  loader.load('grandeur_ig.glb', gltf => {
+  loader.load('2024_hyundai_elantra_n.glb', gltf => {
     carMesh = gltf.scene;
     carMesh.scale.set(1.5, 1.5, 1.5); // 필요에 따라 스케일 조정
     carMesh.traverse(child => {
