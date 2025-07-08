@@ -493,10 +493,10 @@ if (input.left) {
 
     // 카메라 차량 뒤쪽 위치로 고정
     function updateCamera() {
-  const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
-  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
-  camera.position.lerp(cameraOffset, 0.1);
-  camera.lookAt(carMesh.position);
+    const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
+    const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
+    camera.position.lerp(cameraOffset, 0.1);
+    camera.lookAt(carMesh.position);
     }
 
     // 타이머 관리
@@ -514,7 +514,7 @@ if (input.left) {
     }
 
     // 애니메이션 및 물리 루프
- const clock = new THREE.Clock();
+  const clock = new THREE.Clock();
     function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
@@ -539,5 +539,5 @@ if (input.left) {
   renderer.render(scene, camera);
     }
   </script>
-</body>
+  </body>
 </html>
