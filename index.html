@@ -264,7 +264,7 @@ scene.add(carMesh); // 🚨 여기에서 먼저 씬에 넣기
 
 // 🚗 GLTF 자동차 모델 로딩
 const loader = new GLTFLoader();
-loader.load('2024_hyundai_elantra_n.zip', gltf => {
+loader.load('scene.gltf', gltf => {
   const model = gltf.scene;
   model.scale.set(1.5, 1.5, 1.5); // 필요 시 스케일 조정
   model.traverse(child => {
