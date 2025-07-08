@@ -284,7 +284,7 @@ function createGrandeurIGCarDetailed() {
   const bodyGeo = new THREE.ExtrudeGeometry(sideShape, { depth: 13.8, bevelEnabled: false });
   g.rotation.x = Math.PI / 2;
   g.position.y = 0.5;
-  bodyGeo.translate(0, 0.6, 100);
+  bodyGeo.translate(0, 0.6, -20);
   g.add(new THREE.Mesh(bodyGeo, paint));
 
   // --- 보닛 상단 곡면 ---
@@ -296,7 +296,7 @@ function createGrandeurIGCarDetailed() {
   hoodShape.lineTo(-2.2, 0);
   const hoodGeo = new THREE.ExtrudeGeometry(hoodShape, { depth: 2.7, bevelEnabled: false });
   hoodGeo.rotateX(Math.PI / 2);
-  hoodGeo.translate(0, 0.4, 100);
+  hoodGeo.translate(0, 0.4, -20);
   g.add(new THREE.Mesh(hoodGeo, paint));
 
   // --- 트렁크 곡면 ---
