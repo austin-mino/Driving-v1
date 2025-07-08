@@ -264,16 +264,27 @@ scene.add(carMesh); // 🚨 여기에서 먼저 씬에 넣기
 
 // 🚗 GLTF 자동차 모델 로딩
 const loader = new GLTFLoader();
-loader.load('scene.gltf', gltf => {
-  const model = gltf.scene;
-  model.scale.set(1.5, 1.5, 1.5); // 필요 시 스케일 조정
-  model.traverse(child => {
-    if (child.isMesh) child.castShadow = true;
-  });
-  carMesh.add(model); // carMesh에 추가만!
-startTimer();
-animate();
-});
+loader.load(
+  'scene.gltf',
+  gltf => {
+    const model = gltf.scene;
+    model.scale.set(1.5, 1.5, 1.5);
+    model.position.set(0, 0, 0); // ✨ 꼭 넣으세요
+
+    carMesh.add(model);
+
+    startTimer();
+    animate(); // ✨ 반드시 여기서 실행
+  },
+  undefined,
+  error => console.error('❌ GLTF 로딩 실패:', error)
+);
+    const loader = new GLTFLoader();
+const debugCar = new THREE.Mesh(
+  new THREE.BoxGeometry(3, 1, 6),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+carMesh.add(debugCar);
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
