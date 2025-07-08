@@ -112,13 +112,6 @@
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
     import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
-    let isDragging = false;
-let previousMousePosition = { x: 0, y: 0 };
-let yaw = 0;   // 좌우 회전 (y축)
-let pitch = 0; // 상하 회전 (x축)
-
-const sensitivity = 0.005; // 마우스 감도 조절
-
 renderer.domElement.addEventListener('mousedown', (event) => {
   if (event.button === 0) { // 좌클릭
     isDragging = true;
@@ -126,6 +119,9 @@ renderer.domElement.addEventListener('mousedown', (event) => {
     previousMousePosition.y = event.clientY;
   }
 });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
 renderer.domElement.addEventListener('mouseup', (event) => {
   if (event.button === 0) {
@@ -168,6 +164,13 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
     camera.position.set(0, 5, 15);
     camera.lookAt(0, 0, 0);
+
+    let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let yaw = 0;
+let pitch = 0.15; // 약간 위를 보는 초기값
+const sensitivity = 0.005;
+
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -658,11 +661,16 @@ if (input.left) {
 
     // 카메라 차량 뒤쪽 위치로 고정
     function updateCamera() {
-  const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
-  const cameraOffset = relativeCameraOffset.applyMatrix4(carModel.matrixWorld);
-  camera.position.lerp(cameraOffset, 0.1);
-  camera.lookAt(carModel.position);
-    }
+  const carPos = carModel.position.clone();
+
+  const radius = 15;
+  const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
+  const offsetY = radius * Math.sin(pitch) + 7;
+  const offsetZ = radius * Math.cos(pitch) * Math.cos(yaw);
+
+  camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
+  camera.lookAt(carPos);
+}
 
     // 타이머 관리
     let startTime = null;
