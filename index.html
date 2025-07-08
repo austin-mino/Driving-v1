@@ -267,7 +267,7 @@ const loader = new GLTFLoader();
 loader.load(
   'Driving-v1/2024_hyundai_elantra_n-1.glb',
   gltf => {
-    const model = scene.gltf;
+    const model = gltf.scene;
     model.scale.set(4, 4, 4);
     model.position.set(500, 0.5, 0);
     carMesh.add(model);
