@@ -86,6 +86,9 @@
   <div id="hud">속도: 0 km/h</div>
   <div id="timerDisplay">타이머: 0.00 s</div>
   <div id="gearDisplay">기어: P</div>
+  <button id="btnToggleCam" class="controlBtn" style="top: 100px; right: 20px; position: fixed; z-index: 100;">
+  카메라 추적: ON
+  </button>
 
   <!-- 좌/우 스티어링 -->
   <div id="controlsLeft">
@@ -492,7 +495,17 @@ function createGrandeurIGCarDetailed() {
           gearButtons = [...document.querySelectorAll('#gearControls button')],
           hud = document.getElementById('hud'),
           timerDisplay = document.getElementById('timerDisplay');
+// 카메라 추적 ON/OFF 상태 변수
+let cameraFollow = true;
 
+// 토글 버튼 요소 가져오기
+const btnToggleCam = document.getElementById('btnToggleCam');
+
+// 버튼 클릭 시 토글 및 텍스트 변경
+btnToggleCam.addEventListener('click', () => {
+  cameraFollow = !cameraFollow;
+  btnToggleCam.textContent = `카메라 추적: ${cameraFollow ? 'ON' : 'OFF'}`;
+});
     // 초기 기어 상태
     let gearState = 'P';
 
@@ -673,7 +686,13 @@ if (input.left) {
       hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
 
       // 카메라 따라가기
-      updateCamera();
+      if (cameraFollow) {
+  updateCamera();
+} else {
+  // 고정 카메라 위치 (원하면 설정 가능)
+  camera.position.set(0, 5, 15);
+  camera.lookAt(0, 0, 0);
+      }
 
       // 타이머 업데이트
       updateTimer();
