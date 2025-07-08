@@ -286,9 +286,9 @@ scene.add(mesh);
     });
 
     // === 조명 ===
-    scene.add(new THREE.AmbientLight(0xffffff, 1));
-    const dl = new THREE.DirectionalLight(0xffffff, 1.2);
-    dl.position.set(10,20,10);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+    const dl = new THREE.DirectionalLight(0xffffff, 2);
+    dl.position.set(30,50,30);
     scene.add(dl);
 
     // === 카메라 & 입력 변수 ===
@@ -354,6 +354,19 @@ scene.add(mesh);
       vehicle.applyEngineForce(engineForce,2);
       vehicle.applyEngineForce(engineForce,3);
     }
+
+  // === 모바일 버튼 이벤트 연결 ===
+document.getElementById('btnLeft').addEventListener('pointerdown', () => input.left = true);
+document.getElementById('btnLeft').addEventListener('pointerup', () => input.left = false);
+
+document.getElementById('btnRight').addEventListener('pointerdown', () => input.right = true);
+document.getElementById('btnRight').addEventListener('pointerup', () => input.right = false);
+
+document.getElementById('btnAccel').addEventListener('pointerdown', () => input.accel = true);
+document.getElementById('btnAccel').addEventListener('pointerup', () => input.accel = false);
+
+document.getElementById('btnBrake').addEventListener('pointerdown', () => input.brake = true);
+document.getElementById('btnBrake').addEventListener('pointerup', () => input.brake = false);
 
     // === 애니메이션 루프 ===
     const clock = new THREE.Clock();
