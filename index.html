@@ -175,7 +175,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
     camera.position.set(500, 20, 15);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(500, 0.5, 0);
 
     let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
