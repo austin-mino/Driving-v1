@@ -269,22 +269,28 @@ loader.load(
   gltf => {
     const model = gltf.scene;
     model.scale.set(1.5, 1.5, 1.5);
-    model.position.set(0, 0, 0); // ✨ 꼭 넣으세요
-
+    model.position.set(0, 0, 0);
     carMesh.add(model);
 
     startTimer();
-    animate(); // ✨ 반드시 여기서 실행
+    animate();  // 정상적일 때만 호출됨
   },
   undefined,
-  error => console.error('❌ GLTF 로딩 실패:', error)
+  error => {
+    console.error('❌ GLTF 로딩 실패:', error);
+    alert('GLTF 로딩 실패 - 디버깅용 더미 모델로 대체됩니다.');
+    
+    // 디버깅용 박스 자동차로 대체 후 애니메이션 실행
+    const debugCar = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 1, 6),
+      new THREE.MeshStandardMaterial({ color: 0xff0000 })
+    );
+    carMesh.add(debugCar);
+    
+    startTimer();
+    animate();
+  }
 );
-    const loader = new GLTFLoader();
-const debugCar = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 1, 6),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
-);
-carMesh.add(debugCar);
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
