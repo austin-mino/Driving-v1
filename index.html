@@ -276,7 +276,7 @@ loader.load(
   undefined,
   error => {
     console.error('❌ GLTF 로딩 실패:', error);
-    alert('GLTF 로딩 실패 - 디버깅용 더미 모델로 대체됩니다.');
+    alert('GLB 로딩 실패');
     
     // 디버깅용 박스 자동차로 대체 후 애니메이션 실행
     const debugCar = new THREE.Mesh(
