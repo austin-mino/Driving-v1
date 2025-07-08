@@ -582,9 +582,9 @@ if (input.left) {
     // 카메라 차량 뒤쪽 위치로 고정
     function updateCamera() {
   const relativeCameraOffset = new THREE.Vector3(0, 7, 15);
-  const cameraOffset = relativeCameraOffset.applyMatrix4(carMesh.matrixWorld);
+  const cameraOffset = relativeCameraOffset.applyMatrix4(car.matrixWorld);
   camera.position.lerp(cameraOffset, 0.1);
-  camera.lookAt(carMesh.position);
+  camera.lookAt(car.position);
     }
 
     // 타이머 관리
@@ -615,8 +615,8 @@ if (input.left) {
       world.step(1/60, delta, 3);
 
       // 차량 위치/회전 mesh에 반영
-      carMesh.position.copy(chassisBody.position);
-carMesh.quaternion.copy(chassisBody.quaternion);
+      car.position.copy(chassisBody.position);
+car.quaternion.copy(chassisBody.quaternion);
 
       // 휠 mesh 위치/회전 업데이트
       for (let i = 0; i < vehicle.wheelInfos.length; i++) {
