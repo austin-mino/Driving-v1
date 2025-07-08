@@ -490,55 +490,40 @@ if (input.left) {
     }
 
     // 애니메이션 및 물리 루프
- function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-
-    updateVehicleControls();
-    world.step(1/60, delta, 3);
-
-    // 위치·회전 적용
-    carMesh.position.copy(chassisBody.position);
-    carMesh.quaternion.copy(chassisBody.quaternion);
-    
-    const clock = new THREE.Clock();
-
+ const clock = new THREE.Clock();
     function animate() {
-      requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
 
-      const delta = clock.getDelta();
+  updateVehicleControls();
+  world.step(1 / 60, delta, 3);
 
-      updateVehicleControls();
+  // 차량 위치·회전 반영
+  carMesh.position.copy(chassisBody.position);
+  carMesh.quaternion.copy(chassisBody.quaternion);
 
-      world.step(1/60, delta, 3);
+  for (let i = 0; i < vehicle.wheelInfos.length; i++) {
+    vehicle.updateWheelTransform(i);
+    const t = vehicle.wheelInfos[i].worldTransform;
+    wheelHolders[i].position.copy(t.position);
+    wheelHolders[i].quaternion.copy(t.quaternion);
+  }
 
-      // 차량 위치/회전 mesh에 반영
-      carMesh.position.copy(chassisBody.position);
-      carMesh.quaternion.copy(chassisBody.quaternion);
-
-      // 휠 mesh 위치/회전 업데이트
-      for (let i = 0; i < vehicle.wheelInfos.length; i++) {
-        vehicle.updateWheelTransform(i);
-        const t = vehicle.wheelInfos[i].worldTransform;
-        wheelHolders[i].position.copy(t.position);
-        wheelHolders[i].quaternion.copy(t.quaternion);
-      }
-
-      // 속도 UI 업데이트
-      hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
-
-      // 카메라 따라가기
-      updateCamera();
-
-      // 타이머 업데이트
-      updateTimer();
-
-      renderer.render(scene, camera);
+  hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
+  updateCamera();
+  updateTimer();
+  renderer.render(scene, camera);
     }
+    loader.load('grandeur_ig.glb', gltf => {
+  carMesh = gltf.scene;
+  carMesh.scale.set(1.5, 1.5, 1.5);
+  scene.add(carMesh);
 
-    startTimer();
-    updateGearDisplay();
-    animate();
+  // 애니메이션 시작은 모델 로딩 후
+  startTimer();
+  updateGearDisplay();
+  animate(); // ✅ 여기서만 호출
+});
   </script>
 </body>
 </html>
