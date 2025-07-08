@@ -395,7 +395,7 @@ function createGrandeurIGCarDetailed() {
   // --- 휠 아치 ---
   [[-2.3, -5], [2.3, -5], [-2.3, 5], [2.3, 5]].forEach(([x, z]) => {
     const arch = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.15, 16, 32, Math.PI), black);
-    arch.rotation.x = Math.PI / 2;
+    arch.rotation.z = Math.PI / 2;
     arch.position.set(x, 0.35, z);
     g.add(arch);
   });
@@ -468,7 +468,7 @@ function createGrandeurIGCarDetailed() {
 
     // 휠 옵션 - 디자인 및 물리 조정
     const wheelOptions = {
-      radius: 0.5,
+      radius: 1.5,
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 45,
       suspensionRestLength: 0.4,
@@ -482,33 +482,6 @@ function createGrandeurIGCarDetailed() {
       useCustomSlidingRotationalSpeed: true,
       customSlidingRotationalSpeed: -30,
     };
-
-    // 휠 위치 및 앞바퀴 여부 설정
-    [[-1.2, 0.2, 2.4, true], [1.2, 0.2, 2.4, true], [-1.2, 0.2, -2.4, false], [1.2, 0.2, -2.4, false]].forEach(
-      ([x, y, z, isFront]) => {
-        vehicle.addWheel({
-          ...wheelOptions,
-          chassisConnectionPointLocal: new CANNON.Vec3(x, y, z),
-          isFrontWheel: isFront,
-        });
-      }
-    );
-
-    vehicle.addToWorld(world);
-
-    // 휠 메시 생성 - 실제 타이어 모양에 가깝게 디자인 및 각도 조정
-    const wheelHolders = [];
-    vehicle.wheelInfos.forEach((wheel) => {
-      const holder = new THREE.Group();
-      scene.add(holder);
-      wheelHolders.push(holder);
-
-      const tireGeo = new THREE.CylinderGeometry(wheel.radius, wheel.radius, 0.4, 24);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
-      const tireMesh = new THREE.Mesh(tireGeo, tireMat);
-      tireMesh.rotation.z = Math.PI / 2; // 눕히기
-      holder.add(tireMesh);
-    });
 
     // 조명 강화
     scene.add(new THREE.AmbientLight(0xffffff, 1));
