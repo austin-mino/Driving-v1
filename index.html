@@ -109,8 +109,9 @@
   </div>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+  import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
     // 가로모드 체크
     const rotateWarning = document.getElementById('rotateWarning');
@@ -247,79 +248,26 @@ mesh.rotation.x = -Math.PI / 2;
 mesh.position.y = -trackWidth / 2;  // ← 이 줄 추가
 scene.add(mesh);
     
-    // 자동차 차체 물리 (박스)
-    const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
-    const chassisBody = new CANNON.Body({ mass: 110 });
-    chassisBody.addShape(chassisShape);
-    chassisBody.position.set(500, 0.5, 0);
-    chassisBody.angularDamping = 0.5;
-    chassisBody.linearDamping = 0.0;
-    world.addBody(chassisBody);
+    // 자동차 차체 물리 
+    // 차체 물리
+  const chassisShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 3));
+  const chassisBody = new CANNON.Body({ mass: 110 });
+  chassisBody.addShape(chassisShape);
+  chassisBody.position.set(500, 0.5, 0);
+  chassisBody.angularDamping = 0.5;
+  world.addBody(chassisBody);
 
-    // 자동차 시각 모델 (둥근 차체)
-    function createRoundedCarBody() {
-      const group = new THREE.Group();
-
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.6, roughness: 0.4 });
-      const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
-      mainBody.position.y = 0.6;
-      group.add(mainBody);
-
-      const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
-      [[-1.4, 0.6, -2.7], [1.4, 0.6, -2.7], [-1.4, 0.6, 2.7], [1.4, 0.6, 2.7]].forEach(([x,y,z])=>{
-        const s = new THREE.Mesh(sphereGeom, bodyMat);
-        s.position.set(x, y, z);
-        group.add(s);
-      });
-
-      const roof = new THREE.Mesh(
-        new THREE.BoxGeometry(2.5, 0.4, 3),
-        new THREE.MeshStandardMaterial({ color: 0xaa2222, metalness: 0.5, roughness: 0.5 })
-      );
-      roof.position.set(0, 1.3, 0);
-      group.add(roof);
-
-      const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
-      const frontWin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.05), windowMat);
-      frontWin.position.set(0, 1.25, -1.5);
-      group.add(frontWin);
-
-      const rearWin = frontWin.clone();
-      rearWin.position.z = 1.5;
-      group.add(rearWin);
-
-      const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
-      leftWin.position.set(-1.25, 1.25, 0);
-      group.add(leftWin);
-
-      const rightWin = leftWin.clone();
-      rightWin.position.x = 1.25;
-      group.add(rightWin);
-
-      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x990000, metalness: 0.7, roughness: 0.3 });
-      const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
-      fBump.position.set(0, 0.5, -3.1);
-      group.add(fBump);
-
-      const rBump = fBump.clone();
-      rBump.position.z = 3.1;
-      group.add(rBump);
-
-      const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
-      const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), headMat);
-      headLamp.rotation.x = Math.PI / 2;
-      headLamp.position.set(-1.1, 0.8, -3.3);
-      group.add(headLamp);
-
-      const headLampR = headLamp.clone();
-      headLampR.position.x = 1.1;
-      group.add(headLampR);
-
-      return group;
-    }
-
-    const carMesh = createRoundedCarBody();
+  // 🚗 GLTF 자동차 모델 로딩 (현대 그랜저 IG)
+  const loader = new GLTFLoader();
+  let carMesh = new THREE.Group(); // 기본값
+  loader.load('grandeur_ig.glb', gltf => {
+    carMesh = gltf.scene;
+    carMesh.scale.set(1.5, 1.5, 1.5); // 필요에 따라 스케일 조정
+    carMesh.traverse(child => {
+      if (child.isMesh) child.castShadow = true;
+    });
     scene.add(carMesh);
+  });
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
@@ -542,6 +490,17 @@ if (input.left) {
     }
 
     // 애니메이션 및 물리 루프
+ function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+
+    updateVehicleControls();
+    world.step(1/60, delta, 3);
+
+    // 위치·회전 적용
+    carMesh.position.copy(chassisBody.position);
+    carMesh.quaternion.copy(chassisBody.quaternion);
+    
     const clock = new THREE.Clock();
 
     function animate() {
