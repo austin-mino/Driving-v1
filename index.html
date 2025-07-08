@@ -271,6 +271,8 @@ loader.load('scene.gltf', gltf => {
     if (child.isMesh) child.castShadow = true;
   });
   carMesh.add(model); // carMesh에 추가만!
+startTimer();
+animate();
 });
 
     // 차량용 RaycastVehicle 설정
@@ -420,8 +422,6 @@ loader.load('scene.gltf', gltf => {
       button.addEventListener('click', () => setGear(button.textContent));
     });
     updateGearDisplay();
-startTimer();
-animate(); // ✅ 바로 실행 (모델 로딩 여부와 무관하게)
 
     // 차량 조향, 가속, 브레이크 처리
     function updateVehicleControls() {
