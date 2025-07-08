@@ -265,7 +265,7 @@ scene.add(mesh);
     // === 모델 로딩 ===
     const loader = new GLTFLoader();
     let carModel = null;
-  loader.load('https://raw.githubusercontent.com/your-username/Driving-v1/main/2021_dodge_charger_srt_hellcat_redeye.glb',gltf => {
+  loader.load('https://raw.githubusercontent.com/austin-mino/Driving-v1/main/2021_dodge_charger_srt_hellcat_redeye.glb',gltf => {
   carModel = gltf.scene;
   carModel.scale.set(1.2, 1.2, 1.2);
   carModel.position.set(0, 0, 0); // 확인용
