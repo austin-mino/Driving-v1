@@ -265,7 +265,7 @@ scene.add(mesh);
     // === 모델 로딩 ===
     const loader = new GLTFLoader();
     let carModel = null;
-    loader.load('models/car.glb', gltf => {
+    loader.load('/2021_dodge_charger_srt_hellcat_redeye.glb', gltf => {
       carModel = gltf.scene;
       carModel.scale.set(1.2,1.2,1.2);
       scene.add(carModel);
