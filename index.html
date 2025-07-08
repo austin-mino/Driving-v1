@@ -293,7 +293,7 @@ function createGrandeurIGCarDetailed() {
   hoodShape.lineTo(-2.2, 0);
   const hoodGeo = new THREE.ExtrudeGeometry(hoodShape, { depth: 2.7, bevelEnabled: false });
   hoodGeo.rotateX(Math.PI / 2);
-  hoodGeo.translate(0, 0.9, -7.0);
+  hoodGeo.translate(0, 0.9, 0);
   g.add(new THREE.Mesh(hoodGeo, paint));
 
   // --- 트렁크 곡면 ---
@@ -378,24 +378,12 @@ function createGrandeurIGCarDetailed() {
   const br = bf.clone();
   br.position.set(0, 0.25, 7.33);
   g.add(bf, br);
-
-  // --- 휠(타이어 + 림) 생성 함수 ---
-  function createWheel() {
-    const wheelGroup = new THREE.Group();
-
-    // 타이어
-    const tireMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.3, roughness: 0.9 });
-    const tireGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.4, 32);
-    const tireMesh = new THREE.Mesh(tireGeo, tireMat);
-    tireMesh.rotation.x = Math.PI / 2;  // 수정: rotation.z → rotation.x
-
-    wheelGroup.add(tireMesh);
-
+    
     // 휠림
     const rimMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1.0, roughness: 0.3 });
     const rimGeo = new THREE.TorusGeometry(0.5, 0.15, 16, 100);
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.rotation.z = Math.PI / 2;  // 수정: rotation.z → rotation.x
+    rimMesh.rotation.z = Math.PI / 2;  
 
     wheelGroup.add(rimMesh);
 
