@@ -102,13 +102,23 @@
   </div>
     <!-- 기어 선택 -->
   <div id="gearControls">
+
+     <button id="btnCamToggle" class="controlBtn" style="
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 8px;
+    background: rgba(255 255 255 / 0.15);
+    color: #eee;
+    margin-bottom: 10px;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  ">카메라 모드 전환</button>
+    
     <button id="gearP" class="controlBtn">P</button>
     <button id="gearR" class="controlBtn">R</button>
     <button id="gearN" class="controlBtn">N</button>
     <button id="gearD" class="controlBtn">D</button>
-  </div>
-     <div id="Camera">
-    <button id="cameraToggleBtn" class="controlBtn" style="position: fixed; top: 110px; right: 20px; z-index: 100;"> 뒤 따라가기 ON </button>
   </div>
 
   <script type="module">
@@ -133,16 +143,9 @@ renderer.domElement.addEventListener('mouseup', (event) => {
     isDragging = false;
   }
 });
-
-  let followCamera = true;
-    
 renderer.domElement.addEventListener('mousemove', (event) => {
-  if (!isFreeCamera || !isDragging) return;
+  if (!isDragging) return;
 
-  // followCamera가 true면 뒤 따라가기 모드이므로 마우스 움직임 무시
-  if (followCamera) return;
-
-  // 자유 시점 모드일 때만 yaw, pitch 조절
   const deltaMove = {
     x: event.clientX - previousMousePosition.x,
     y: event.clientY - previousMousePosition.y
@@ -150,7 +153,6 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
   yaw -= deltaMove.x * sensitivity;
   pitch -= deltaMove.y * sensitivity;
-
 
   const pitchLimit = Math.PI / 3;
   pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
@@ -174,21 +176,60 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
-    camera.position.set(500, 20, 15);
-    camera.lookAt(500, 0.5, 0);
+    camera.position.set(0, 5, 15);
+    camera.lookAt(0, 0, 0);
 
     let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let yaw = 0;
-let isFreeCamera = false;
 let pitch = 0.15; // 약간 위를 보는 초기값
 const sensitivity = 0.005;
+
+    // 맨 위쪽, yaw, pitch, isDragging 선언부 아래쯤에
+let cameraFollow = true; // true: 차량 뒤따라가기, false: 자유 시점
+
+// 버튼 선택 및 이벤트 등록
+const btnCamToggle = document.getElementById('btnCamToggle');
+btnCamToggle.addEventListener('click', () => {
+  cameraFollow = !cameraFollow;
+  btnCamToggle.textContent = cameraFollow ? '자유 시점' : '뒤따라가기';
+});
+btnCamToggle.textContent = '자유 시점'; // 초기 텍스트 (현재는 follow 상태이므로 토글 누르면 자유 시점)
+
+// updateCamera 함수 수정
+function updateCamera() {
+  const carPos = carModel.position.clone();
+
+  if (cameraFollow) {
+    // 차량 뒤따라가기 모드 (기존 방식)
+    const radius = 15;
+    const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
+    const offsetY = radius * Math.sin(pitch) + 7;
+    const offsetZ = radius * Math.cos(pitch) * Math.cos(yaw);
+
+    camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
+    camera.lookAt(carPos);
+  } else {
+    // 자유 시점 모드 (마우스 드래그로 yaw/pitch 조작)
+    const distance = 20;
+    const x = carPos.x + distance * Math.sin(yaw) * Math.cos(pitch);
+    const y = carPos.y + distance * Math.sin(pitch) + 5;
+    const z = carPos.z + distance * Math.cos(yaw) * Math.cos(pitch);
+
+    camera.position.set(x, y, z);
+    camera.lookAt(carPos);
+  }
+}
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
+document.getElementById('btnReset').addEventListener('click', resetCar);
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'r') resetCar();
+});
 
 function resetCar() {
   // 위치는 그대로, 높이 약간 위로
@@ -330,7 +371,7 @@ function createGrandeurIGCarDetailed() {
   const bodyGeo = new THREE.ExtrudeGeometry(sideShape, { depth: 13.8, bevelEnabled: false });
   g.rotation.x = Math.PI / 2;
   g.position.y = 0.5;
-  g.position.z = 0;
+  g.position.z = -28;
   bodyGeo.translate(0, 0.6, 0);
   g.add(new THREE.Mesh(bodyGeo, paint));
 
@@ -537,13 +578,6 @@ function createGrandeurIGCarDetailed() {
           hud = document.getElementById('hud'),
           timerDisplay = document.getElementById('timerDisplay');
 
-    const cameraToggleBtn = document.getElementById('cameraToggleBtn');
-cameraToggleBtn.addEventListener('click', () => {
-  followCamera = !followCamera;
-  cameraToggleBtn.textContent = followCamera ? '뒤 따라가기 ON' : '뒤 따라가기 OFF';
-});
-
-  
     // 초기 기어 상태
     let gearState = 'P';
 
@@ -562,7 +596,6 @@ cameraToggleBtn.addEventListener('click', () => {
         case '2': setGear('R'); break;
         case '3': setGear('N'); break;
         case '4': setGear('D'); break;
-        case 'c': isFreeCamera = !isFreeCamera; break;
       }
     });
 
@@ -608,7 +641,7 @@ cameraToggleBtn.addEventListener('click', () => {
     let steeringValue = 0;
 
     function updateGearDisplay() {
-      gearDisplay.textContent = `기어: ${gearState}`;
+      gearDisplay.textContent = 기어: ${gearState};
       const colorMap = { P: '#00ffff', R: '#ff5555', N: '#ffff55', D: '#55ff55' };
       gearDisplay.style.color = colorMap[gearState] || '#fff';
     }
@@ -674,24 +707,17 @@ if (input.left) {
     }
 
     // 카메라 차량 뒤쪽 위치로 고정
-   function updateCamera() {
-  const carPos = chassisBody.position.clone(); // 실제 차량 위치 기준
+    function updateCamera() {
+  const carPos = carModel.position.clone();
 
-  if (isFreeCamera) {
-    const radius = 15;
-    const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
-    const offsetY = radius * Math.sin(pitch) + 7;
-    const offsetZ = radius * Math.cos(pitch) * Math.cos(yaw);
+  const radius = 15;
+  const offsetX = radius * Math.cos(pitch) * Math.sin(yaw);
+  const offsetY = radius * Math.sin(pitch) + 7;
+  const offsetZ = radius * Math.cos(pitch) * Math.cos(yaw);
 
-    camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
-    camera.lookAt(carPos);
-  } else {
-    const offset = new THREE.Vector3(0, 15, 15).applyQuaternion(chassisBody.quaternion);
-    camera.position.copy(chassisBody.position).add(offset);
-    camera.lookAt(chassisBody.position);
-  }
+  camera.position.set(carPos.x + offsetX, carPos.y + offsetY, carPos.z + offsetZ);
+  camera.lookAt(carPos);
 }
-
 
     // 타이머 관리
     let startTime = null;
@@ -704,7 +730,7 @@ if (input.left) {
     function updateTimer() {
       if (startTime === null) return;
       elapsedTime = (performance.now() - startTime) / 1000;
-      timerDisplay.textContent = `타이머: ${elapsedTime.toFixed(2)} s`;
+      timerDisplay.textContent = 타이머: ${elapsedTime.toFixed(2)} s;
     }
 
     // 애니메이션 및 물리 루프
@@ -734,7 +760,7 @@ if (input.left) {
       }
 
       // 속도 UI 업데이트
-      hud.textContent = `속도: ${getSpeedKmH().toFixed(1)} km/h`;
+      hud.textContent = 속도: ${getSpeedKmH().toFixed(1)} km/h;
 
       // 카메라 따라가기
       updateCamera();
@@ -744,12 +770,6 @@ if (input.left) {
 
       renderer.render(scene, camera);
     }
-
-document.getElementById('btnReset').addEventListener('click', resetCar);
-window.addEventListener('keydown', e => {
-  if (e.key.toLowerCase() === 'r') resetCar();
-});
-
 
     startTimer();
     updateGearDisplay();
