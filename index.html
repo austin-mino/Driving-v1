@@ -133,6 +133,9 @@ renderer.domElement.addEventListener('mouseup', (event) => {
     isDragging = false;
   }
 });
+
+  let followCamera = true;
+    
 renderer.domElement.addEventListener('mousemove', (event) => {
   if (!isFreeCamera || !isDragging) return;
 
@@ -147,8 +150,6 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
   yaw -= deltaMove.x * sensitivity;
   pitch -= deltaMove.y * sensitivity;
-
-  let followCamera = true;  // 처음에는 차량 뒤 따라가기 모드
 
 
   const pitchLimit = Math.PI / 3;
@@ -173,7 +174,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
-    camera.position.set(500, 5, 15);
+    camera.position.set(500, 20, 15);
     camera.lookAt(0, 0, 0);
 
     let isDragging = false;
