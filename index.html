@@ -202,13 +202,13 @@
       });
 
     vehicle.addToWorld(world);
-   // === 타원형 트랙 파라미터 ===
+
+    // === 바리어 생성 (수정된 각도 계산) ===
     const trackA = 500;  // x 방향 반지름
     const trackB = 60;   // z 방향 반지름
     const trackWidth = 60;
     const numSegments = 400;
 
-    // === 바리어 ===
     const barrierHeight = 1;
     const barrierThickness = 1;
     const barrierLength = 25;
@@ -227,7 +227,10 @@
       const outerX = (trackA + trackWidth / 2) * cx;
       const outerZ = (trackB + trackWidth / 2) * sz;
 
-      const rotationY = -Math.atan2(trackB * Math.cos(angle), -trackA * Math.sin(angle));
+      // 타원 접선 방향으로 각도 계산 (수정)
+      const dx = -trackA * Math.sin(angle);
+      const dz = trackB * Math.cos(angle);
+      const rotationY = Math.atan2(dz, dx);
 
       // 안쪽, 바깥쪽 바리어 생성
       [ [innerX, innerZ], [outerX, outerZ] ].forEach(([x, z]) => {
@@ -264,12 +267,11 @@
     const trackMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     const trackMesh = new THREE.Mesh(trackGeom, trackMat);
     trackMesh.rotation.x = -Math.PI / 2;
-    trackMesh.position.y = -trackWidth / 2;
+    trackMesh.position.y = 0;
     scene.add(trackMesh);
 
-    // === GLB 차량 모델 로드 ===
-   /*
-   const loader = new GLTFLoader();
+    // === GLB 차량 모델 로드 및 휠 메쉬 생성 ===
+    const loader = new GLTFLoader();
     let carModel = null;
 
     loader.load(
@@ -284,7 +286,6 @@
       err => console.error('❌ GLB 로드 실패:', err)
     );
 
-    // === 휠 시각화용 THREE.Mesh 추가 ===
     const wheelHolders = vehicle.wheelInfos.map(() => {
       const g = new THREE.Group();
       const mesh = new THREE.Mesh(
@@ -295,14 +296,15 @@
       g.add(mesh);
       scene.add(g);
       return g;
-    });*/
+    });
 
     // === 조명 추가 ===
     scene.add(new THREE.AmbientLight(0xffffff, 1.8));
     const dl = new THREE.DirectionalLight(0xffffff, 2);
     dl.position.set(30, 50, 30);
     scene.add(dl);
-   // === 카메라 제어 변수 ===
+
+    // === 카메라 제어 변수 ===
     let yaw = 0, pitch = 0.15, isDragging = false;
     const sensitivity = 0.005;
     let previousMouse = { x: 0, y: 0 };
