@@ -258,16 +258,20 @@ scene.add(mesh);
   world.addBody(chassisBody);
 
   // 🚗 GLTF 자동차 모델 로딩 (현대 그랜저 IG)
-  const loader = new GLTFLoader();
-  let carMesh = new THREE.Group(); // 기본값
-  loader.load('2024_hyundai_elantra_n.glb', gltf => {
-    carMesh = gltf.scene;
-    carMesh.scale.set(1.5, 1.5, 1.5); // 필요에 따라 스케일 조정
-    carMesh.traverse(child => {
-      if (child.isMesh) child.castShadow = true;
-    });
-    scene.add(carMesh);
+  // GLTF 모델 추가 전, 미리 그룹 생성
+let carMesh = new THREE.Group();
+scene.add(carMesh); // 🚨 여기에서 먼저 씬에 넣기
+
+// 🚗 GLTF 자동차 모델 로딩
+const loader = new GLTFLoader();
+loader.load('2024_hyundai_elantra_n.glb', gltf => {
+  const model = gltf.scene;
+  model.scale.set(1.5, 1.5, 1.5); // 필요 시 스케일 조정
+  model.traverse(child => {
+    if (child.isMesh) child.castShadow = true;
   });
+  carMesh.add(model); // carMesh에 추가만!
+});
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
@@ -415,6 +419,9 @@ scene.add(mesh);
     gearButtons.forEach(button => {
       button.addEventListener('click', () => setGear(button.textContent));
     });
+    updateGearDisplay();
+startTimer();
+animate(); // ✅ 바로 실행 (모델 로딩 여부와 무관하게)
 
     // 차량 조향, 가속, 브레이크 처리
     function updateVehicleControls() {
@@ -514,16 +521,6 @@ if (input.left) {
   updateTimer();
   renderer.render(scene, camera);
     }
-    loader.load('2024_hyundai_elantra_n.glb', gltf => {
-  carMesh = gltf.scene;
-  carMesh.scale.set(1.5, 1.5, 1.5);
-  scene.add(carMesh);
-
-  // 애니메이션 시작은 모델 로딩 후
-  startTimer();
-  updateGearDisplay();
-  animate(); // ✅ 여기서만 호출
-});
   </script>
 </body>
 </html>
