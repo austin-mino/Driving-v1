@@ -245,7 +245,7 @@ const geometry = new THREE.ExtrudeGeometry(trackShape, extrudeSettings);
 const material = new THREE.MeshStandardMaterial({ color: 0x222222 });
 const mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
-mesh.position.y = -trackWidth / 2;  // ← 이 줄 추가
+mesh.position.y = 0;  // ← 이 줄 추가
 scene.add(mesh);
     
     // 자동차 차체 물리 
