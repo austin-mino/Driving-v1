@@ -148,14 +148,6 @@ renderer.domElement.addEventListener('mousemove', (event) => {
   yaw -= deltaMove.x * sensitivity;
   pitch -= deltaMove.y * sensitivity;
 
-  const pitchLimit = Math.PI / 3;
-  pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
-
-  previousMousePosition.x = event.clientX;
-  previousMousePosition.y = event.clientY;
-});
-
-  
   let followCamera = true;  // 처음에는 차량 뒤 따라가기 모드
 
 
