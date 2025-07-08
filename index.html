@@ -265,6 +265,7 @@ const loader = new GLTFLoader();
 loader.load(
   '/2024_hyundai_elantra_n-1.glb',
   gltf => {
+    alert('✅ GLB 로딩 성공');
     const model = gltf.scene;
     model.scale.set(4, 4, 4);
     model.position.set(500, 0.5, 0);
@@ -275,8 +276,7 @@ loader.load(
   },
   undefined,
   error => {
-    console.error('❌ GLTF 로딩 실패:', error);
-    alert('GLB 로딩 실패');
+    alert('GLB 로딩 실패:'+error.message);
     
     // 디버깅용 박스 자동차로 대체 후 애니메이션 실행
     const debugCar = new THREE.Mesh(
