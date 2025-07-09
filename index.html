@@ -263,85 +263,177 @@ scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
   function createGrandeurIGCarDetailed() {
-  const group = new THREE.Group();
+  const car = new THREE.Group();
 
-  const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x5555ff });
-  const windowMaterial = new THREE.MeshStandardMaterial({
-    color: 0x222244,
-    transparent: true,
-    opacity: 0.6,
-  });
+  const paint = new THREE.MeshStandardMaterial({ color: 0x2b2e45, metalness: 0.6, roughness: 0.4 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x336699, transparent: true, opacity: 0.5 });
 
-  // --- 차체 본체 ---
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 1, 10),
-    bodyMaterial
-  );
-  body.position.y = 0.5;
-  group.add(body);
+  // 앞 범퍼 상단
+  const frontBumperTop = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.5, 0.4), paint);
+  frontBumperTop.position.set(0, 0.75, -4.7);
+  car.add(frontBumperTop);
 
-  // --- 본넷 (앞부분 약간 올라오게) ---
-  const hood = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 0.4, 2),
-    bodyMaterial
-  );
-  hood.position.set(0, 1, -4);
-  group.add(hood);
+  // 앞 범퍼 하단
+  const frontBumperBottom = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.5, 0.4), paint);
+  frontBumperBottom.position.set(0, 0.25, -4.7);
+  car.add(frontBumperBottom);
 
-  // --- 루프 ---
-  const roof = new THREE.Mesh(
-    new THREE.BoxGeometry(3.4, 0.5, 3),
-    bodyMaterial
-  );
-  roof.position.set(0, 1.5, 0);
-  group.add(roof);
+  // 본넷 앞 부분
+  const hoodFront = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.4, 0.6), paint);
+  hoodFront.position.set(0, 1.0, -4.1);
+  car.add(hoodFront);
 
-  // --- 트렁크 ---
-  const trunk = new THREE.Mesh(
-    new THREE.BoxGeometry(3.6, 0.4, 1.8),
-    bodyMaterial
-  );
-  trunk.position.set(0, 1.1, 4.3);
-  group.add(trunk);
+  // 본넷 중간 부분
+  const hoodMid = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.4, 0.6), paint);
+  hoodMid.position.set(0, 1.0, -3.5);
+  car.add(hoodMid);
 
-  // --- 전면 유리 ---
-  const windshield = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.2, 1.5),
-    windowMaterial
-  );
-  windshield.position.set(0, 1.5, -2.5);
+  // 본넷 뒤 부분
+  const hoodRear = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.4, 0.6), paint);
+  hoodRear.position.set(0, 1.0, -2.9);
+  car.add(hoodRear);
+
+  // 전면 펜더 앞 좌
+  const fenderFrontLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 1.0), paint);
+  fenderFrontLeft.position.set(-2.3, 0.5, -3.7);
+  car.add(fenderFrontLeft);
+
+  // 전면 펜더 앞 우
+  const fenderFrontRight = fenderFrontLeft.clone();
+  fenderFrontRight.position.x = 2.3;
+  car.add(fenderFrontRight);
+
+  // 전면 펜더 뒤 좌
+  const fenderMidLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 1.0), paint);
+  fenderMidLeft.position.set(-2.3, 0.5, -2.7);
+  car.add(fenderMidLeft);
+
+  // 전면 펜더 뒤 우
+  const fenderMidRight = fenderMidLeft.clone();
+  fenderMidRight.position.x = 2.3;
+  car.add(fenderMidRight);
+
+  // 앞 도어 상단 좌
+  const doorFrontTopLeft = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.0), paint);
+  doorFrontTopLeft.position.set(-1.2, 1.1, -1.5);
+  car.add(doorFrontTopLeft);
+
+  // 앞 도어 하단 좌
+  const doorFrontBottomLeft = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.0), paint);
+  doorFrontBottomLeft.position.set(-1.2, 0.5, -1.5);
+  car.add(doorFrontBottomLeft);
+
+  // 앞 도어 상단 우
+  const doorFrontTopRight = doorFrontTopLeft.clone();
+  doorFrontTopRight.position.x = 1.2;
+  car.add(doorFrontTopRight);
+
+  // 앞 도어 하단 우
+  const doorFrontBottomRight = doorFrontBottomLeft.clone();
+  doorFrontBottomRight.position.x = 1.2;
+  car.add(doorFrontBottomRight);
+
+  // 뒤 도어 상단 좌
+  const doorRearTopLeft = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.0), paint);
+  doorRearTopLeft.position.set(-1.2, 1.1, 0.5);
+  car.add(doorRearTopLeft);
+
+  // 뒤 도어 하단 좌
+  const doorRearBottomLeft = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.0), paint);
+  doorRearBottomLeft.position.set(-1.2, 0.5, 0.5);
+  car.add(doorRearBottomLeft);
+
+  // 뒤 도어 상단 우
+  const doorRearTopRight = doorRearTopLeft.clone();
+  doorRearTopRight.position.x = 1.2;
+  car.add(doorRearTopRight);
+
+  // 뒤 도어 하단 우
+  const doorRearBottomRight = doorRearBottomLeft.clone();
+  doorRearBottomRight.position.x = 1.2;
+  car.add(doorRearBottomRight);
+
+  // 후면 펜더 앞 좌
+  const fenderRearFrontLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 1.0), paint);
+  fenderRearFrontLeft.position.set(-2.3, 0.5, 1.5);
+  car.add(fenderRearFrontLeft);
+
+  // 후면 펜더 앞 우
+  const fenderRearFrontRight = fenderRearFrontLeft.clone();
+  fenderRearFrontRight.position.x = 2.3;
+  car.add(fenderRearFrontRight);
+
+  // 후면 펜더 뒤 좌
+  const fenderRearBackLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 1.0), paint);
+  fenderRearBackLeft.position.set(-2.3, 0.5, 2.5);
+  car.add(fenderRearBackLeft);
+
+  // 후면 펜더 뒤 우
+  const fenderRearBackRight = fenderRearBackLeft.clone();
+  fenderRearBackRight.position.x = 2.3;
+  car.add(fenderRearBackRight);
+
+  // 루프 앞
+  const roofFront = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.3, 1.2), paint);
+  roofFront.position.set(0, 1.6, -0.9);
+  car.add(roofFront);
+
+  // 루프 중간
+  const roofMid = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.3, 1.4), paint);
+  roofMid.position.set(0, 1.6, 0.4);
+  car.add(roofMid);
+
+  // 루프 뒤
+  const roofRear = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.3, 1.2), paint);
+  roofRear.position.set(0, 1.6, 1.8);
+  car.add(roofRear);
+
+  // 트렁크 앞
+  const trunkFront = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.4, 0.6), paint);
+  trunkFront.position.set(0, 1.0, 3.6);
+  car.add(trunkFront);
+
+  // 트렁크 중간
+  const trunkMid = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.4, 0.6), paint);
+  trunkMid.position.set(0, 1.0, 4.2);
+  car.add(trunkMid);
+
+  // 트렁크 뒤
+  const trunkRear = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.4, 0.6), paint);
+  trunkRear.position.set(0, 1.0, 4.8);
+  car.add(trunkRear);
+
+  // 앞 유리
+  const windshield = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.4), glass);
   windshield.rotation.x = -Math.PI / 4;
-  group.add(windshield);
+  windshield.position.set(0, 1.5, -2.2);
+  car.add(windshield);
 
-  // --- 후면 유리 ---
-  const rearGlass = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.2, 1.3),
-    windowMaterial
-  );
-  rearGlass.position.set(0, 1.4, 2.5);
+  // 뒤 유리
+  const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.2), glass);
   rearGlass.rotation.x = Math.PI / 4;
-  group.add(rearGlass);
+  rearGlass.position.set(0, 1.5, 2.2);
+  car.add(rearGlass);
 
-  // --- 측면 유리 (좌/우) ---
-  for (let x of [-1.9, 1.9]) {
-    const sideGlass1 = new THREE.Mesh(
-      new THREE.PlaneGeometry(3, 1),
-      windowMaterial
-    );
-    sideGlass1.position.set(x, 1.4, -1);
-    sideGlass1.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
-    group.add(sideGlass1);
+  // 측면 유리 (앞/중간 좌우)
+  for (let x of [-2.1, 2.1]) {
+    const sideWinFront = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), glass);
+    sideWinFront.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2;
+    sideWinFront.position.set(x, 1.5, -1.5);
+    car.add(sideWinFront);
 
-    const sideGlass2 = new THREE.Mesh(
-      new THREE.PlaneGeometry(3, 1),
-      windowMaterial
-    );
-    sideGlass2.position.set(x, 1.4, 1.5);
-    sideGlass2.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
-    group.add(sideGlass2);
+    const sideWinMid = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), glass);
+    sideWinMid.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2;
+    sideWinMid.position.set(x, 1.5, 0);
+    car.add(sideWinMid);
+
+    const sideWinRear = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), glass);
+    sideWinRear.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2;
+    sideWinRear.position.set(x, 1.5, 1.5);
+    car.add(sideWinRear);
   }
 
-  return group;
+  return car;
   }
 
     // 차량용 RaycastVehicle 설정
