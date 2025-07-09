@@ -262,91 +262,87 @@ scene.add(mesh);
 scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
-function createGrandeurIGCarDetailed() {
-  const g = new THREE.Group();
+  function createGrandeurIGCarDetailed() {
+  const group = new THREE.Group();
 
-  // --- 재질 ---
-  const paint = new THREE.MeshPhongMaterial({ color: 0x8899aa, shininess: 100 });
-  const chrome = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, shininess: 200 });
-  const black = new THREE.MeshPhongMaterial({ color: 0x111111 });
-  const glass = new THREE.MeshPhongMaterial({ color: 0x336688, transparent: true, opacity: 0.5 });
+  const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x5555ff });
+  const windowMaterial = new THREE.MeshStandardMaterial({
+    color: 0x222244,
+    transparent: true,
+    opacity: 0.6,
+  });
 
-  // --- 차체 ---
-  const bodyShape = new THREE.Shape();
-  bodyShape.moveTo(-2, -1);
-  bodyShape.bezierCurveTo(-2, 1.2, 2, 1.2, 2, -1);
-  bodyShape.lineTo(2, -1.3);
-  bodyShape.lineTo(-2, -1.3);
-  const bodyGeo = new THREE.ExtrudeGeometry(bodyShape, { depth: 10, bevelEnabled: false });
-  const bodyMesh = new THREE.Mesh(bodyGeo, paint);
-  bodyMesh.rotation.x = Math.PI / 2;
-  bodyMesh.position.set(0, 0.5, -5);
-  g.add(bodyMesh);
+  // --- 차체 본체 ---
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 1, 10),
+    bodyMaterial
+  );
+  body.position.y = 0.5;
+  group.add(body);
+
+  // --- 본넷 (앞부분 약간 올라오게) ---
+  const hood = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 0.4, 2),
+    bodyMaterial
+  );
+  hood.position.set(0, 1, -4);
+  group.add(hood);
 
   // --- 루프 ---
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.4, 4), paint);
-  roof.position.set(0, 1.7, 0);
-  g.add(roof);
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(3.4, 0.5, 3),
+    bodyMaterial
+  );
+  roof.position.set(0, 1.5, 0);
+  group.add(roof);
+
+  // --- 트렁크 ---
+  const trunk = new THREE.Mesh(
+    new THREE.BoxGeometry(3.6, 0.4, 1.8),
+    bodyMaterial
+  );
+  trunk.position.set(0, 1.1, 4.3);
+  group.add(trunk);
 
   // --- 전면 유리 ---
-  const fw = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.3), glass);
-  fw.position.set(0, 2.0, -3.5);
-  fw.rotation.x = -Math.PI / 4;
-  g.add(fw);
+  const windshield = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 1.5),
+    windowMaterial
+  );
+  windshield.position.set(0, 1.5, -2.5);
+  windshield.rotation.x = -Math.PI / 4;
+  group.add(windshield);
 
   // --- 후면 유리 ---
-  const rw = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 1.1), glass);
-  rw.position.set(0, 1.9, 3.5);
-  rw.rotation.x = Math.PI / 4;
-  g.add(rw);
+  const rearGlass = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 1.3),
+    windowMaterial
+  );
+  rearGlass.position.set(0, 1.4, 2.5);
+  rearGlass.rotation.x = Math.PI / 4;
+  group.add(rearGlass);
 
-  // --- 측면 유리 (좌우)
-  for (let x of [-2, 2]) {
-    const side = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.1, 3.6), glass);
-    side.position.set(x, 1.85, 0);
-    g.add(side);
+  // --- 측면 유리 (좌/우) ---
+  for (let x of [-1.9, 1.9]) {
+    const sideGlass1 = new THREE.Mesh(
+      new THREE.PlaneGeometry(3, 1),
+      windowMaterial
+    );
+    sideGlass1.position.set(x, 1.4, -1);
+    sideGlass1.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
+    group.add(sideGlass1);
+
+    const sideGlass2 = new THREE.Mesh(
+      new THREE.PlaneGeometry(3, 1),
+      windowMaterial
+    );
+    sideGlass2.position.set(x, 1.4, 1.5);
+    sideGlass2.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
+    group.add(sideGlass2);
   }
 
-  // --- 헤드라이트 ---
-  const headLight = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 8), chrome);
-  headLight.position.set(-1.8, 0.6, -5.1);
-  const headRight = headLight.clone();
-  headRight.position.x = 1.8;
-  g.add(headLight, headRight);
-
-  // --- 테일램프 ---
-  const tailLamp = new THREE.Mesh(new THREE.BoxGeometry(4, 0.2, 0.2), chrome);
-  tailLamp.position.set(0, 0.6, 5.1);
-  g.add(tailLamp);
-
-  // --- 휠 함수 ---
-  function createWheel() {
-    const wheel = new THREE.Group();
-
-    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.4, 16), black);
-    tire.rotation.x = Math.PI / 2;
-    wheel.add(tire);
-
-    const rim = new THREE.Mesh(new THREE.CircleGeometry(0.3, 16), chrome);
-    rim.rotation.x = Math.PI / 2;
-    wheel.add(rim);
-
-    return wheel;
+  return group;
   }
-
-  // --- 휠 배치 ---
-  const wheelPos = [
-    [-1.6, 0.2, -3.8], [1.6, 0.2, -3.8],
-    [-1.6, 0.2, 3.8], [1.6, 0.2, 3.8],
-  ];
-  for (let [x, y, z] of wheelPos) {
-    const w = createWheel();
-    w.position.set(x, y, z);
-    g.add(w);
-  }
-
-  return g;
-}
 
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
