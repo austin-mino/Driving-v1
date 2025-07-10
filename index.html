@@ -92,16 +92,16 @@
 
   <!-- 좌/우 스티어링 -->
   <div id="controlsLeft">
-    <button id="btnLeft" class="controlBtn">◀ 좌</button>
-    <button id="btnRight" class="controlBtn">우 ▶</button>
+    <button id="btnLeft" class="controlBtn">◀</button>
+    <button id="btnRight" class="controlBtn">▶</button>
   </div>
   <!-- 엑셀·브레이크 -->
   <div id="driveControls">
-    <button id="btnAccel" class="controlBtn">엑셀</button>
-    <button id="btnBrake" class="controlBtn">브레이크</button>
+    <button id="btnAccel" class="controlBtn">accel</button>
+    <button id="btnBrake" class="controlBtn">brake</button>
   <div id="reset">
     <!-- 기어 선택 아래에 추가 -->
-    <button id="btnReset" class="controlBtn">차량 리셋</button>
+    <button id="btnReset" class="controlBtn">리셋</button>
   </div>
     <!-- 기어 선택 -->
   <div id="gearControls">
@@ -301,7 +301,7 @@ scene.add(carModel);
   rightWin.position.x = 1.25;
   group.add(rightWin);
 
-  const bumperMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
+  const bumperMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
   const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
   fBump.position.set(0, 0.5, -3.1);
   group.add(fBump);
