@@ -145,7 +145,8 @@
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
     import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
-
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+    
     // 가로모드 체크
     const rotateWarning = document.getElementById('rotateWarning');
     function checkOrientation() {
@@ -165,6 +166,13 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.enablePan = false;
+controls.minDistance = 5;
+controls.maxDistance = 30;
+controls.maxPolarAngle = Math.PI / 2;
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -646,6 +654,7 @@ if (input.left) {
       if (cameraFollow) {
   updateCamera();
 } else {
+        controls.update();
   // 고정 카메라 위치 (원하면 설정 가능)
   camera.position.set(500, 5, 15);
   camera.lookAt(500, 0.5, 0);
@@ -653,7 +662,7 @@ if (input.left) {
 
       // 타이머 업데이트
       updateTimer();
-
+      
       renderer.render(scene, camera);
     }
 
