@@ -262,69 +262,89 @@ scene.add(mesh);
 scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
-  function createGrandeurIGCarDetailed() {
-      const group = new THREE.Group();
+   function createGrandeurIGCarDetailed() {
+  const group = new THREE.Group();
 
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.6, roughness: 0.4 });
-      const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
-      mainBody.position.y = 0.6;
-      group.add(mainBody);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.6, roughness: 0.4 });
+  const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
+  mainBody.position.y = 0.6;
+  group.add(mainBody);
 
-      const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
-      [[-1.4, 0.6, -2.7], [1.4, 0.6, -2.7], [-1.4, 0.6, 2.7], [1.4, 0.6, 2.7]].forEach(([x,y,z])=>{
-        const s = new THREE.Mesh(sphereGeom, bodyMat);
-        s.position.set(x, y, z);
-        group.add(s);
-      });
+  const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
+  [[-1.4, 0.6, -2.7], [1.4, 0.6, -2.7], [-1.4, 0.6, 2.7], [1.4, 0.6, 2.7]].forEach(([x,y,z])=>{
+    const s = new THREE.Mesh(sphereGeom, bodyMat);
+    s.position.set(x, y, z);
+    group.add(s);
+  });
 
-      const roof = new THREE.Mesh(
-        new THREE.BoxGeometry(2.5, 0.4, 3),
-        new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5, roughness: 0.5 })
-      );
-      roof.position.set(0, 1.3, 0);
-      group.add(roof);
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(2.5, 0.4, 3),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5, roughness: 0.5 })
+  );
+  roof.position.set(0, 1.3, 0);
+  group.add(roof);
 
-      const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
-      const frontWin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.05), windowMat);
-      frontWin.position.set(0, 1.25, -1.5);
-      group.add(frontWin);
+  const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
+  const frontWin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.05), windowMat);
+  frontWin.position.set(0, 1.25, -1.5);
+  group.add(frontWin);
 
-      const rearWin = frontWin.clone();
-      rearWin.position.z = 1.5;
-      group.add(rearWin);
+  const rearWin = frontWin.clone();
+  rearWin.position.z = 1.5;
+  group.add(rearWin);
 
-      const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
-      leftWin.position.set(-1.25, 1.25, 0);
-      group.add(leftWin);
+  const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
+  leftWin.position.set(-1.25, 1.25, 0);
+  group.add(leftWin);
 
-      const rightWin = leftWin.clone();
-      rightWin.position.x = 1.25;
-      group.add(rightWin);
+  const rightWin = leftWin.clone();
+  rightWin.position.x = 1.25;
+  group.add(rightWin);
 
-      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
-      const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
-      fBump.position.set(0, 0.5, -3.1);
-      group.add(fBump);
+  const bumperMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
+  const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
+  fBump.position.set(0, 0.5, -3.1);
+  group.add(fBump);
 
-      const rBump = fBump.clone();
-      rBump.position.z = 3.1;
-      group.add(rBump);
+  const rBump = fBump.clone();
+  rBump.position.z = 3.1;
+  group.add(rBump);
 
-      const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
-      const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), headMat);
-      headLamp.rotation.x = Math.PI / 2;
-      headLamp.position.set(-1.1, 0.8, -3.3);
-      group.add(headLamp);
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
+  const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), headMat);
+  headLamp.rotation.x = Math.PI / 2;
+  headLamp.position.set(-1.1, 0.8, -3.3);
+  group.add(headLamp);
 
-      const headLampR = headLamp.clone();
-      headLampR.position.x = 1.1;
-      group.add(headLampR);
+  const headLampR = headLamp.clone();
+  headLampR.position.x = 1.1;
+  group.add(headLampR);
 
-      return group;
-    }
+  // ✅ 사이드미러 추가
+  const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+  for (let side of [-1, 1]) {
+    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.3), mirrorMat);
+    mirror.position.set(side * 1.6, 1.2, -1.8);
+    mirror.rotation.y = side * Math.PI / 8;
+    group.add(mirror);
+  }
 
-    const carMesh = createGrandeurIGCarDetailed();
-    scene.add(carMesh);
+  // ✅ 후미등 추가
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff3333, emissiveIntensity: 0.6 });
+  const tailLampL = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), tailMat);
+  tailLampL.rotation.x = Math.PI / 2;
+  tailLampL.position.set(-1.1, 0.8, 3.3);
+  group.add(tailLampL);
+
+  const tailLampR = tailLampL.clone();
+  tailLampR.position.x = 1.1;
+  group.add(tailLampR);
+
+  return group;
+}
+
+const carMesh = createGrandeurIGCarDetailed();
+scene.add(carMesh);
   
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
