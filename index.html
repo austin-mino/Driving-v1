@@ -195,7 +195,7 @@ function onPointerMove(event) {
     const deltaY = event.clientY - dragStart.y;
 
     // 회전 속도 조절 (적당히 조정 가능)
-    const rotationSpeed = 0.02;
+    const rotationSpeed = 0.05
 
     camAzimuth = camAzimuthStart - deltaX * rotationSpeed;
     camElevation = camElevationStart - deltaY * rotationSpeed;
@@ -694,16 +694,17 @@ if (input.left) {
 
       // 카메라 따라가기
   if (cameraFollow) {
-  updateCamera();
-} else {
-  const carPos = carModel.position;
+    updateCamera();
+  } else {
+    const carPos = carModel.position;
 
-  const desiredX = carPos.x + camDistance * Math.sin(camElevation) * Math.sin(camAzimuth);
-  const desiredY = carPos.y + camDistance * Math.cos(camElevation);
-  const desiredZ = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
+    const desiredX = carPos.x + camDistance * Math.sin(camElevation) * Math.sin(camAzimuth);
+    const desiredY = carPos.y + camDistance * Math.cos(camElevation);
+    const desiredZ = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
 
-  camera.position.set(desiredX, desiredY, desiredZ);
-  camera.lookAt(carPos);
+    // lerp 대신 즉시 위치 세팅 (빠르고 끊김 적음)
+    camera.position.set(desiredX, desiredY, desiredZ);
+    camera.lookAt(carPos);
   }
 
       // 타이머 업데이트
