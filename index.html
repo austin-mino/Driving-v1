@@ -711,7 +711,7 @@ if (input.left) {
   const currentLookAt = new THREE.Vector3();
   camera.getWorldDirection(currentLookAt);
   const desiredLookAt = carPos.clone().sub(camera.position).normalize();
-  const smoothedLookAt = currentLookAt.lerp(desiredLookAt, 0.1);
+  const smoothedLookAt = currentLookAt.lerp(desiredLookAt, 0.05);
   const lookAtTarget = camera.position.clone().add(smoothedLookAt);
   camera.lookAt(lookAtTarget);
   }
