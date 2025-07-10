@@ -262,7 +262,7 @@ scene.add(mesh);
 scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
-function createGrandeurIGCarDetailed() {
+  function createGrandeurIGCarDetailed() {
   const car = new THREE.Group();
 
   const paint = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.3 });
@@ -287,28 +287,37 @@ function createGrandeurIGCarDetailed() {
   }
 
   // 유리창 재조정
+
+  // 앞유리 (윈드실드)
   const windshield = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.0), glass);
-  windshield.rotation.x = -Math.PI / 6;
-  windshield.position.set(0, 1.1, -3.05);
-  car.add(windshield);
+  windshield.rotation.x = -Math.PI / 10;  // 약 -18도
+  windshield.position.set(0, 1.1, -2.85);
 
+  // 뒷유리
   const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.0), glass);
-  rearGlass.rotation.x = Math.PI / 6;
-  rearGlass.position.set(0, 1.1, 3.05);
-  car.add(rearGlass);
+  rearGlass.rotation.x = Math.PI / 10;  // 약 18도
+  rearGlass.position.set(0, 1.1, 2.85);
 
-  for (let i = 0; i < 2; i++) {
-    const z = -0.8 + i * 1.6;
-    const right = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
-    right.rotation.y = -Math.PI / 2;
-    right.position.set(1.5, 1.1, z);
-    car.add(right);
+  // 좌우 앞쪽 창문
+  const frontWindowRight = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
+  frontWindowRight.rotation.y = -Math.PI / 8;  // 약 -22.5도
+  frontWindowRight.position.set(1.5, 1.1, -0.6);
 
-    const left = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
-    left.rotation.y = Math.PI / 2;
-    left.position.set(-1.5, 1.1, z);
-    car.add(left);
-  }
+  const frontWindowLeft = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
+  frontWindowLeft.rotation.y = Math.PI / 8;  // 약 22.5도
+  frontWindowLeft.position.set(-1.5, 1.1, -0.6);
+
+  // 좌우 뒤쪽 창문
+  const rearWindowRight = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
+  rearWindowRight.rotation.y = -Math.PI / 8;  // 약 -22.5도
+  rearWindowRight.position.set(1.5, 1.1, 0.6);
+
+  const rearWindowLeft = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), glass);
+  rearWindowLeft.rotation.y = Math.PI / 8;  // 약 22.5도
+  rearWindowLeft.position.set(-1.5, 1.1, 0.6);
+
+  // car에 추가
+  car.add(windshield, rearGlass, frontWindowRight, frontWindowLeft, rearWindowRight, rearWindowLeft);
 
   // 도어라인 (앞/뒤 도어 4줄)
   [-1.5, -0.5, 0.5, 1.5].forEach(z => {
@@ -340,15 +349,17 @@ function createGrandeurIGCarDetailed() {
     car.add(muffler);
   }
 
-  // 모서리 곡선 (전/후면)
+  // 모서리 곡선 (전면 좌우 + 후면 좌우, 총 4곳)
   const cornerGeo = new THREE.CylinderGeometry(0.35, 0.35, 1.0, 16, 1, false, 0, Math.PI / 2);
   for (let side = -1; side <= 1; side += 2) {
+    // 앞쪽 모서리
     const front = new THREE.Mesh(cornerGeo, paint);
     front.rotation.z = Math.PI / 2;
     front.rotation.y = side === 1 ? 0 : Math.PI;
     front.position.set(side * 1.5, 0.5, -3.3);
     car.add(front);
 
+    // 뒤쪽 모서리
     const rear = new THREE.Mesh(cornerGeo, paint);
     rear.rotation.z = Math.PI / 2;
     rear.rotation.y = side === 1 ? Math.PI : 0;
@@ -356,16 +367,7 @@ function createGrandeurIGCarDetailed() {
     car.add(rear);
   }
 
-  // 하단 곡선
-  const bottomSphere = new THREE.SphereGeometry(0.3, 12, 12, 0, Math.PI);
-  for (let side = -1; side <= 1; side += 2) {
-    for (let i = 0; i < 4; i++) {
-      const corner = new THREE.Mesh(bottomSphere, paint);
-      corner.rotation.z = Math.PI;
-      corner.position.set(side * 1.5, 0.0, -2.4 + i * 1.6);
-      car.add(corner);
-    }
-  }
+  // 하단 곡선 부분 삭제 (기존 bottomSphere 제거)
 
   // 헤드라이트
   for (let side = -1; side <= 1; side += 2) {
@@ -382,8 +384,8 @@ function createGrandeurIGCarDetailed() {
   }
 
   return car;
-}
-    
+  }
+  
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
       chassisBody,
