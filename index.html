@@ -297,8 +297,9 @@ scene.add(mesh);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
-   const carModel = createGrandeurIGCarDetailed();
-scene.add(carModel);
+    const carModel = createGrandeurIGCarDetailed();
+    carModel.position.copy(chassisBody.position);
+    scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
    function createGrandeurIGCarDetailed() {
