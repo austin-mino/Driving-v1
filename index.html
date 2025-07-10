@@ -161,7 +161,7 @@
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
     camera.position.set(500, 5, 15);
-    camera.lookAt(carModel.position);
+    
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -300,6 +300,7 @@ scene.add(mesh);
     const carModel = createGrandeurIGCarDetailed();
     carModel.position.copy(chassisBody.position);
     scene.add(carModel);
+    camera.lookAt(carModel.position);
 
     // 자동차 시각 모델 (둥근 차체)
    function createGrandeurIGCarDetailed() {
