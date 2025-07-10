@@ -311,9 +311,9 @@ scene.add(carModel);
   group.add(rBump);
 
   const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
-  const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.12, 0.26, 32), headMat);
+  const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.73, 32), headMat);
   headLamp.rotation.x = Math.PI / 2;
-  headLamp.position.set(-1.1, 0.8, -3.3);
+  headLamp.position.set(-1.1, 0.5, -3.3);
   group.add(headLamp);
 
   const headLampR = headLamp.clone();
