@@ -127,8 +127,7 @@
   <div id="driveControls">
     <button id="btnAccel" class="controlBtn">accel</button>
     <button id="btnBrake" class="controlBtn">brake</button>
-  
-    <div id="reset">
+  <div id="reset">
     <!-- 기어 선택 아래에 추가 -->
     <button id="btnReset" class="controlBtn">리셋</button>
   </div>
@@ -146,8 +145,7 @@
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
     import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
-    
+
     // 가로모드 체크
     const rotateWarning = document.getElementById('rotateWarning');
     function checkOrientation() {
@@ -162,18 +160,11 @@
     scene.background = new THREE.Color(0x222222);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 5000);
     camera.position.set(500, 5, 15);
-    
+    camera.lookAt(500, 0.5, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.enablePan = false;
-controls.minDistance = 5;
-controls.maxDistance = 30;
-controls.maxPolarAngle = Math.PI / 2;
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -298,10 +289,8 @@ scene.add(mesh);
     chassisBody.angularDamping = 0.5;
     chassisBody.linearDamping = 0.0;
     world.addBody(chassisBody);
-    const carModel = createGrandeurIGCarDetailed();
-    carModel.position.copy(chassisBody.position);
-    scene.add(carModel);
-    camera.lookAt(carModel.position);
+   const carModel = createGrandeurIGCarDetailed();
+scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
    function createGrandeurIGCarDetailed() {
@@ -390,8 +379,9 @@ group.add(tailBar);
   return group;
 }
 
-    controls.target.set(carModel.position.x, carModel.position.y, carModel.position.z);
-controls.update();
+const carMesh = createGrandeurIGCarDetailed();
+scene.add(carMesh);
+  
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
       chassisBody,
@@ -656,12 +646,14 @@ if (input.left) {
       if (cameraFollow) {
   updateCamera();
 } else {
-        controls.update();
+  // 고정 카메라 위치 (원하면 설정 가능)
+  camera.position.set(500, 5, 15);
+  camera.lookAt(500, 0.5, 0);
       }
 
       // 타이머 업데이트
       updateTimer();
-      
+
       renderer.render(scene, camera);
     }
 
