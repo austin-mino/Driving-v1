@@ -705,13 +705,13 @@ if (input.left) {
   const desiredZ = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
 
   // 현재 카메라 위치와 목표 위치 사이를 부드럽게 보간 (lerp)
-  camera.position.lerp(new THREE.Vector3(desiredX, desiredY, desiredZ), 0.1);
+  camera.position.lerp(new THREE.Vector3(desiredX, desiredY, desiredZ), 0.7);
 
   // 시선도 부드럽게 보간해서 자동차 쪽을 바라보도록
   const currentLookAt = new THREE.Vector3();
   camera.getWorldDirection(currentLookAt);
   const desiredLookAt = carPos.clone().sub(camera.position).normalize();
-  const smoothedLookAt = currentLookAt.lerp(desiredLookAt, 0.05);
+  const smoothedLookAt = currentLookAt.lerp(desiredLookAt, 0.7);
   const lookAtTarget = camera.position.clone().add(smoothedLookAt);
   camera.lookAt(lookAtTarget);
   }
