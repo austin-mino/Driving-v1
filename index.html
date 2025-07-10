@@ -90,6 +90,26 @@
   padding: 8px 12px;
   font-size: 14px;
 }
+    #btnToggleCam {
+  position: fixed;
+  top: 80px;        /* 위에서부터 거리 조절 */
+  right: 20px;      /* 오른쪽에서부터 거리 */
+  padding: 10px 14px; /* 버튼 크기 조절 */
+  font-size: 16px;    /* 글자 크기 */
+  border-radius: 12px;
+  background: #0078d7;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 100;
+  user-select: none;
+  touch-action: manipulation;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+#btnToggleCam:active {
+  background: #005a9e;
+}
   </style>
 </head>
 <body>
@@ -97,9 +117,6 @@
   <div id="hud">속도: 0 km/h</div>
   <div id="timerDisplay">타이머: 0.00 s</div>
   <div id="gearDisplay">기어: P</div>
-  <button id="btnToggleCam" class="controlBtn" style="top: 100px; right: 20px; position: fixed; z-index: 100;">
-  C:ON
-  </button>
 
   <!-- 좌/우 스티어링 -->
   <div id="controlsLeft">
