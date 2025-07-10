@@ -265,7 +265,7 @@ scene.add(carModel);
   function createGrandeurIGCarDetailed() {
       const group = new THREE.Group();
 
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.6, roughness: 0.4 });
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.6, roughness: 0.4 });
       const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
       mainBody.position.y = 0.6;
       group.add(mainBody);
@@ -279,7 +279,7 @@ scene.add(carModel);
 
       const roof = new THREE.Mesh(
         new THREE.BoxGeometry(2.5, 0.4, 3),
-        new THREE.MeshStandardMaterial({ color: 0xaa2222, metalness: 0.5, roughness: 0.5 })
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5, roughness: 0.5 })
       );
       roof.position.set(0, 1.3, 0);
       group.add(roof);
@@ -301,7 +301,7 @@ scene.add(carModel);
       rightWin.position.x = 1.25;
       group.add(rightWin);
 
-      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x990000, metalness: 0.7, roughness: 0.3 });
+      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
       const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
       fBump.position.set(0, 0.5, -3.1);
       group.add(fBump);
