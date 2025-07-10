@@ -331,7 +331,7 @@ scene.add(carModel);
 
   // ✅ 후미등 추가
   const tailMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff3333, emissiveIntensity: 0.6 });
-const tailBar = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.1), tailMat);
+const tailBar = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 0.05), tailMat);
 tailBar.position.set(0, 0.85, 3.3);  // 차 뒷부분, 중심 위치
 group.add(tailBar);
 
