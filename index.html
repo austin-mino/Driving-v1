@@ -389,7 +389,9 @@ group.add(tailBar);
 
 const carMesh = createGrandeurIGCarDetailed();
 scene.add(carMesh);
-  
+
+    controls.target.set(carModel.position.x, carModel.position.y, carModel.position.z);
+controls.update();
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
       chassisBody,
@@ -655,9 +657,6 @@ if (input.left) {
   updateCamera();
 } else {
         controls.update();
-  // 고정 카메라 위치 (원하면 설정 가능)
-  camera.position.set(500, 5, 15);
-  camera.lookAt(500, 0.5, 0);
       }
 
       // 타이머 업데이트
