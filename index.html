@@ -281,7 +281,7 @@ scene.add(carModel);
     new THREE.BoxGeometry(2.5, 0.4, 3),
     new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5, roughness: 0.5 })
   );
-  roof.position.set(0, 1.3, 0);
+  roof.position.set(0, 1.5, 0);
   group.add(roof);
 
   const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
@@ -294,7 +294,7 @@ scene.add(carModel);
   group.add(rearWin);
 
   const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
-  leftWin.position.set(-1.25, 1.25, 0);
+  leftWin.position.set(-1.25, 1.35, 0);
   group.add(leftWin);
 
   const rightWin = leftWin.clone();
