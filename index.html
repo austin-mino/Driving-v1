@@ -323,7 +323,7 @@ scene.add(carModel);
   // ✅ 사이드미러 추가
   const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
   for (let side of [-1, 1]) {
-    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.08, 0.45), mirrorMat);
+    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.1, 0.5), mirrorMat);
     mirror.position.set(side * 1.6, 1.2, -1.8);
     mirror.rotation.y = side * Math.PI / 8;
     group.add(mirror);
