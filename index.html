@@ -543,6 +543,7 @@ btnToggleCam.addEventListener('click', () => {
         case 'w': input.accel = false; break;
         case 'arrowdown':
         case 's': input.brake = false; break;
+        case 'c': btnToggleCam.click(); break;
       }
     });
 
@@ -695,17 +696,28 @@ if (input.left) {
       if (cameraFollow) {
   updateCamera();
 } else {
+  if (cameraFollow) {
+  updateCamera();
+} else {
   // 자유 카메라: 자동차를 중심으로 구면 좌표 변환해서 위치 설정
   const carPos = carModel.position;
 
   // 구면 좌표를 카르테시안 좌표로 변환
-  const x = carPos.x + camDistance * Math.sin(camElevation) * Math.sin(camAzimuth);
-  const y = carPos.y + camDistance * Math.cos(camElevation);
-  const z = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
+  const desiredX = carPos.x + camDistance * Math.sin(camElevation) * Math.sin(camAzimuth);
+  const desiredY = carPos.y + camDistance * Math.cos(camElevation);
+  const desiredZ = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
 
-  camera.position.set(x, y, z);
-  camera.lookAt(carPos);
-      }
+  // 현재 카메라 위치와 목표 위치 사이를 부드럽게 보간 (lerp)
+  camera.position.lerp(new THREE.Vector3(desiredX, desiredY, desiredZ), 0.1);
+
+  // 시선도 부드럽게 보간해서 자동차 쪽을 바라보도록
+  const currentLookAt = new THREE.Vector3();
+  camera.getWorldDirection(currentLookAt);
+  const desiredLookAt = carPos.clone().sub(camera.position).normalize();
+  const smoothedLookAt = currentLookAt.lerp(desiredLookAt, 0.1);
+  const lookAtTarget = camera.position.clone().add(smoothedLookAt);
+  camera.lookAt(lookAtTarget);
+  }
 
       // 타이머 업데이트
       updateTimer();
