@@ -165,6 +165,55 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    // 자유 카메라 각도 변수 (구면좌표)
+// 초기 각도는 뒤쪽 약간 위에서 바라보는 느낌으로 설정
+let camAzimuth = Math.PI;       // 좌우 회전 (0~2PI)
+let camElevation = Math.PI / 6; // 위아래 회전 (0~PI, 0:위, PI:아래)
+
+// 카메라와 자동차 사이 거리
+const camDistance = 15;
+
+// 마우스/터치 드래그 상태 저장
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let camAzimuthStart = camAzimuth;
+let camElevationStart = camElevation;
+
+// 마우스 이벤트 핸들러
+function onPointerDown(event) {
+  if (!cameraFollow) {
+    isDragging = true;
+    dragStart.x = event.clientX;
+    dragStart.y = event.clientY;
+    camAzimuthStart = camAzimuth;
+    camElevationStart = camElevation;
+  }
+}
+function onPointerMove(event) {
+  if (isDragging && !cameraFollow) {
+    const deltaX = event.clientX - dragStart.x;
+    const deltaY = event.clientY - dragStart.y;
+
+    // 회전 속도 조절 (적당히 조정 가능)
+    const rotationSpeed = 0.005;
+
+    camAzimuth = camAzimuthStart - deltaX * rotationSpeed;
+    camElevation = camElevationStart - deltaY * rotationSpeed;
+
+    // camElevation 제한 (0.1 ~ PI-0.1)으로 너무 위아래 제한
+    camElevation = Math.min(Math.max(camElevation, 0.1), Math.PI - 0.1);
+  }
+}
+function onPointerUp(event) {
+  isDragging = false;
+}
+
+// 터치 이벤트도 동일하게 처리
+renderer.domElement.addEventListener('pointerdown', onPointerDown);
+renderer.domElement.addEventListener('pointermove', onPointerMove);
+renderer.domElement.addEventListener('pointerup', onPointerUp);
+renderer.domElement.addEventListener('pointerleave', onPointerUp);
+renderer.domElement.addEventListener('touchcancel', onPointerUp);
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -646,9 +695,16 @@ if (input.left) {
       if (cameraFollow) {
   updateCamera();
 } else {
-  // 고정 카메라 위치 (원하면 설정 가능)
-  camera.position.set(500, 5, 15);
-  camera.lookAt(500, 0.5, 0);
+  // 자유 카메라: 자동차를 중심으로 구면 좌표 변환해서 위치 설정
+  const carPos = carModel.position;
+
+  // 구면 좌표를 카르테시안 좌표로 변환
+  const x = carPos.x + camDistance * Math.sin(camElevation) * Math.sin(camAzimuth);
+  const y = carPos.y + camDistance * Math.cos(camElevation);
+  const z = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
+
+  camera.position.set(x, y, z);
+  camera.lookAt(carPos);
       }
 
       // 타이머 업데이트
