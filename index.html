@@ -263,121 +263,68 @@ scene.add(carModel);
 
     // 자동차 시각 모델 (둥근 차체)
   function createGrandeurIGCarDetailed() {
-  const car = new THREE.Group();
+      const group = new THREE.Group();
 
-  const paint = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.3 });
-  const glass = new THREE.MeshStandardMaterial({ color: 0x336699, transparent: true, opacity: 0.5 });
-  const black = new THREE.MeshStandardMaterial({ color: 0x111111 });
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x333333 });
-  const lightMat = new THREE.MeshStandardMaterial({ color: 0xffffcc, emissive: 0xffffcc });
-  const tailLightMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff3333 });
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.6, roughness: 0.4 });
+      const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), bodyMat);
+      mainBody.position.y = 0.6;
+      group.add(mainBody);
 
-  // 차체 본체 (길고 낮은 세단 형태)
-  for (let i = 0; i < 12; i++) {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 0.5), paint);
-    body.position.set(0, 0.5, -3.3 + i * 0.55);
-    car.add(body);
-  }
+      const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
+      [[-1.4, 0.6, -2.7], [1.4, 0.6, -2.7], [-1.4, 0.6, 2.7], [1.4, 0.6, 2.7]].forEach(([x,y,z])=>{
+        const s = new THREE.Mesh(sphereGeom, bodyMat);
+        s.position.set(x, y, z);
+        group.add(s);
+      });
 
-  // 루프
-  for (let i = 0; i < 4; i++) {
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.3, 0.8), paint);
-    roof.position.set(0, 1.15, -1.2 + i * 0.8);
-    car.add(roof);
-  }
+      const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(2.5, 0.4, 3),
+        new THREE.MeshStandardMaterial({ color: 0xaa2222, metalness: 0.5, roughness: 0.5 })
+      );
+      roof.position.set(0, 1.3, 0);
+      group.add(roof);
 
-  // 앞유리
-  const windshield = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.1), glass);
-  windshield.rotation.x = -Math.PI / 6;
-  windshield.position.set(0, 1.0, -3.2);
-  car.add(windshield);
+      const windowMat = new THREE.MeshStandardMaterial({ color: 0x446688, transparent: true, opacity: 0.5, roughness: 0.1 });
+      const frontWin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.05), windowMat);
+      frontWin.position.set(0, 1.25, -1.5);
+      group.add(frontWin);
 
-  // 뒷유리
-  const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.0), glass);
-  rearGlass.rotation.x = Math.PI / 6;
-  rearGlass.position.set(0, 1.0, 3.2);
-  car.add(rearGlass);
+      const rearWin = frontWin.clone();
+      rearWin.position.z = 1.5;
+      group.add(rearWin);
 
-  // 옆 유리 (앞/뒤 도어 + 쿼터글라스)
-  const sideZs = [-1.4, 0.0, 1.4]; // 앞도어, 뒷도어, 쿼터글라스
-  const sideWidths = [1.3, 1.3, 0.6];
-  sideZs.forEach((z, i) => {
-    const w = sideWidths[i];
-    // 오른쪽
-    const right = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.8), glass);
-    right.rotation.y = -Math.PI / 2;
-    right.position.set(1.51, 1.05, z);
-    car.add(right);
+      const leftWin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 3), windowMat);
+      leftWin.position.set(-1.25, 1.25, 0);
+      group.add(leftWin);
 
-    // 왼쪽
-    const left = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.8), glass);
-    left.rotation.y = Math.PI / 2;
-    left.position.set(-1.51, 1.05, z);
-    car.add(left);
-  });
+      const rightWin = leftWin.clone();
+      rightWin.position.x = 1.25;
+      group.add(rightWin);
 
-  // 도어라인 (4개)
-  [-1.5, -0.5, 0.5, 1.5].forEach(z => {
-    const line = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.8, 2.0), black);
-    line.position.set(0, 0.5, z);
-    car.add(line);
-  });
+      const bumperMat = new THREE.MeshStandardMaterial({ color: 0x990000, metalness: 0.7, roughness: 0.3 });
+      const fBump = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, 0.5), bumperMat);
+      fBump.position.set(0, 0.5, -3.1);
+      group.add(fBump);
 
-  // 그릴
-  for (let i = -2; i <= 2; i++) {
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.05), black);
-    bar.position.set(i * 0.3, 0.3, -3.6);
-    car.add(bar);
-  }
+      const rBump = fBump.clone();
+      rBump.position.z = 3.1;
+      group.add(rBump);
 
-  // 사이드미러 (작고 루프 기둥 옆에 위치)
-  for (let side = -1; side <= 1; side += 2) {
-    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.2), black);
-    mirror.rotation.y = side * Math.PI / 5;
-    mirror.position.set(side * 1.65, 0.95, -2.6);
-    car.add(mirror);
-  }
+      const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffee, emissiveIntensity: 0.7 });
+      const headLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), headMat);
+      headLamp.rotation.x = Math.PI / 2;
+      headLamp.position.set(-1.1, 0.8, -3.3);
+      group.add(headLamp);
 
-  // 머플러
-  for (let side = -1; side <= 1; side += 2) {
-    const muffler = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.2, 12), darkMetal);
-    muffler.rotation.x = Math.PI / 2;
-    muffler.position.set(side * 0.6, 0.1, 3.55);
-    car.add(muffler);
-  }
+      const headLampR = headLamp.clone();
+      headLampR.position.x = 1.1;
+      group.add(headLampR);
 
-  // 앞/뒤 모서리 곡선
-  const cornerGeo = new THREE.CylinderGeometry(0.4, 0.4, 1.0, 20, 1, false, 0, Math.PI / 2);
-  for (let side = -1; side <= 1; side += 2) {
-    const front = new THREE.Mesh(cornerGeo, paint);
-    front.rotation.z = Math.PI / 2;
-    front.rotation.y = side === 1 ? 0 : Math.PI;
-    front.position.set(side * 1.5, 0.5, -3.5);
-    car.add(front);
+      return group;
+    }
 
-    const rear = new THREE.Mesh(cornerGeo, paint);
-    rear.rotation.z = Math.PI / 2;
-    rear.rotation.y = side === 1 ? Math.PI : 0;
-    rear.position.set(side * 1.5, 0.5, 3.5);
-    car.add(rear);
-  }
-
-  // 헤드라이트
-  for (let side = -1; side <= 1; side += 2) {
-    const light = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.1), lightMat);
-    light.position.set(side * 1.2, 0.6, -3.55);
-    car.add(light);
-  }
-
-  // 테일라이트
-  for (let side = -1; side <= 1; side += 2) {
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.1), tailLightMat);
-    tail.position.set(side * 1.2, 0.6, 3.55);
-    car.add(tail);
-  }
-
-  return car;
-  }
+    const carMesh = createGrandeurIGCarDetailed();
+    scene.add(carMesh);
   
     // 차량용 RaycastVehicle 설정
     const vehicle = new CANNON.RaycastVehicle({
