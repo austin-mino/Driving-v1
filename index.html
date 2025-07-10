@@ -195,7 +195,7 @@ function onPointerMove(event) {
     const deltaY = event.clientY - dragStart.y;
 
     // 회전 속도 조절 (적당히 조정 가능)
-    const rotationSpeed = 0.5;
+    const rotationSpeed = 0.02;
 
     camAzimuth = camAzimuthStart - deltaX * rotationSpeed;
     camElevation = camElevationStart - deltaY * rotationSpeed;
