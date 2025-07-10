@@ -271,7 +271,7 @@ scene.add(carModel);
   group.add(mainBody);
 
   const sphereGeom = new THREE.SphereGeometry(0.6, 16, 16);
-  [[-1.3, 0.6, -2.7], [1.3, 0.6, -2.7], [-1.3, 0.6, 2.7], [1.3, 0.6, 2.7]].forEach(([x,y,z])=>{
+  [[-1.2, 0.6, -2.7], [1.2, 0.6, -2.7], [-1.2, 0.6, 2.7], [1.2, 0.6, 2.7]].forEach(([x,y,z])=>{
     const s = new THREE.Mesh(sphereGeom, bodyMat);
     s.position.set(x, y, z);
     group.add(s);
