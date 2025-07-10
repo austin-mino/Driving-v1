@@ -702,9 +702,23 @@ if (input.left) {
     const desiredY = carPos.y + camDistance * Math.cos(camElevation);
     const desiredZ = carPos.z + camDistance * Math.sin(camElevation) * Math.cos(camAzimuth);
 
-    // lerp 대신 즉시 위치 세팅 (빠르고 끊김 적음)
-    camera.position.set(desiredX, desiredY, desiredZ);
-    camera.lookAt(carPos);
+    // 목표 위치 벡터 생성
+    const desiredPos = new THREE.Vector3(desiredX, desiredY, desiredZ);
+
+    // 현재 카메라 위치에서 목표 위치까지 lerp (보간값 0.2 ~ 0.3 권장)
+    camera.position.lerp(desiredPos, 0.2);
+
+    // 부드러운 시선 방향 보간
+    const currentLookAt = new THREE.Vector3();
+    camera.getWorldDirection(currentLookAt);
+
+    const desiredLookAt = carPos.clone().sub(camera.position).normalize();
+
+    currentLookAt.lerp(desiredLookAt, 0.2);
+
+    const lookAtTarget = camera.position.clone().add(currentLookAt);
+
+    camera.lookAt(lookAtTarget);
   }
 
       // 타이머 업데이트
